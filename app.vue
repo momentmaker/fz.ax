@@ -1,13 +1,16 @@
 <template>
   <div :class="['container', { 'modal-open': showModal }]">
     <h1 @click="openModal" class="title">four-thousand weekz</h1>
+    <h3 class="subtitle">
+      <span class="ngmi">{{ pastWeeksCount }}</span>-⬢ ⏣ ⬡-<span class="wagmi">{{ futureWeeksCount }}</span>
+    </h3>
 
     <div v-if="showModal" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
-        <h2 class="title">dob</h2>
-        <input type="date" v-model="dob" />
-        <button class="btn-76" @click="saveDOB">dob</button>
-        <div class="subtitle">will be saved to your local browser storage</div>
+        <h2 class="modal-header">d⬡b</h2>
+        <input type="date" v-model="dob" @keyup.enter="saveDOB" />
+        <button class="btn-76" @click="saveDOB">4⬢⏣⬡</button>
+        <div class="modal-subtitle">will be saved to your local browser storage</div>
       </div>
     </div>
 
@@ -18,6 +21,10 @@
         <span :class="['hover-text', { 'hide-hover-text': showModal }]">{{ getWeekRange(index) }}</span>
       </div>
     </div>
+  </div>
+
+  <div :class="['hexagon-scroll', { toggled: showScrollButton }]" @click="scrollToTop">
+    <div class="icon">⬢</div>
   </div>
 </template>
 
@@ -30,11 +37,24 @@ export default {
       currentWeek: 0,
       weeks: Array(4000).fill(null),
       today: new Date(),
+      showScrollButton: false,
     };
   },
   mounted() {
     this.loadDOB();
     this.scrollToCurrentWeek();
+    window.addEventListener('scroll', this.handleScroll);
+  },
+  beforeDestroy() {
+    window.removeEventListener('scroll', this.handleScroll);
+  },
+  computed: {
+    pastWeeksCount() {
+      return this.currentWeek;
+    },
+    futureWeeksCount() {
+      return 4000 - this.currentWeek - 1;
+    }
   },
   methods: {
     openModal() {
@@ -57,8 +77,11 @@ export default {
       if (storedDob) {
         this.dob = storedDob;
       } else {
-        // Set default date to July 7, 1977
-        this.dob = '1977-07-07';
+        // Set default DOB to 4000 weeks ago from today
+        const weeksAgo = 4000 * 7 * 24 * 60 * 60 * 1000;
+        const defaultDob = new Date(this.today.getTime() - weeksAgo);
+        this.dob = defaultDob.toISOString().split('T')[0];
+        this.showModal = true;
       }
       this.calculateCurrentWeek();
       this.scrollToCurrentWeek();
@@ -102,6 +125,12 @@ export default {
       const startDate = new Date(new Date(this.dob).getTime() + index * (7 * 24 * 60 * 60 * 1000));
       const endDate = new Date(startDate.getTime() + (6 * 24 * 60 * 60 * 1000));
       return `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`;
+    },
+    handleScroll() {
+      this.showScrollButton = window.scrollY > 100;
+    },
+    scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
 };
@@ -123,10 +152,23 @@ export default {
   color: #F7B808;
   display: inline-block;
   transition: all 0.7s ease;
+  margin-bottom: 0px;
 }
 
 .title:hover {
   animation: pulsate 0.6s infinite;
+}
+
+.subtitle {
+  color: #F7B808;
+  font-size: 1.2rem;
+}
+
+.ngmi,
+.wagmi {
+  font-size: 0.7rem;
+  vertical-align: middle;
+  color: #0847F7;
 }
 
 .modal-overlay {
@@ -190,7 +232,12 @@ export default {
   /* Hide hover text when modal is open */
 }
 
-.subtitle {
+.modal-header {
+  font-size: 2.1rem;
+  color: #F7B808;
+}
+
+.modal-subtitle {
   font-size: 0.7rem;
 }
 
