@@ -1,9 +1,7 @@
 <template>
   <div :class="['container', { 'modal-open': showModal }]">
-    <!-- Title in the center -->
     <h1 @click="openModal" class="title">four-thousand weekz</h1>
 
-    <!-- Modal for asking DOB -->
     <div v-if="showModal" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
         <h2 class="title">dob</h2>
@@ -13,7 +11,6 @@
       </div>
     </div>
 
-    <!-- Hexagon grid -->
     <div class="hexagon-grid">
       <div v-for="(week, index) in weeks" :key="index" :id="index === currentWeek ? 'current-week' : null"
         :class="getHexagonClass(index)" @mouseover="hoverWeek(index)" class="hexagon">
@@ -111,7 +108,6 @@ export default {
 </script>
 
 <style scoped>
-/* This is mostly intended for prototyping; please download the pattern and re-host for production environments. Thank you! */
 .container {
   text-align: center;
   padding: 2rem;
@@ -119,13 +115,18 @@ export default {
 
 .modal-open .hexagon-grid {
   pointer-events: none;
-  /* Disable hover on hexagons when modal is open */
 }
 
 .title {
-  font-size: 2rem;
+  font-size: 2.1rem;
   cursor: pointer;
   color: #F7B808;
+  display: inline-block;
+  transition: all 0.7s ease;
+}
+
+.title:hover {
+  animation: pulsate 0.6s infinite;
 }
 
 .modal-overlay {
@@ -334,5 +335,18 @@ input[type="date"] {
     grid-template-columns: repeat(7, 1fr);
   }
 }
-</style>
 
+@keyframes pulsate {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+</style>
