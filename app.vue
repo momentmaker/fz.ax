@@ -2,7 +2,9 @@
   <div :class="['container', { 'modal-open': showModal }]">
     <h1 @click="openModal" class="title">four-thousand weekz</h1>
     <h3 class="subtitle">
-      <span class="ngmi">{{ pastWeeksCount }}</span>-⬢ ⏣ ⬡-<span class="wagmi">{{ futureWeeksCount }}</span>
+      <span class="ngmi">{{ pastWeeksCount }}</span>-⬢ <span class="beherenow" @click="scrollToCurrentWeek">⏣</span>
+      ⬡-<span class="wagmi">{{
+        futureWeeksCount }}</span>
     </h3>
 
     <div v-if="showModal" class="modal-overlay" @click="closeModal">
@@ -190,6 +192,11 @@ export default {
   font-size: 0.7rem;
   vertical-align: middle;
   color: #0847F7;
+}
+
+.beherenow {
+  cursor: progress;
+  font-size: 1.5rem;
 }
 
 .modal-overlay {
