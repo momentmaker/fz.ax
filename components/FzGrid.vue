@@ -21,9 +21,11 @@ const today = ref(new Date())
 
 const indices: number[] = Array.from({ length: totalWeeks }, (_, i) => i)
 
+const dobString = computed(() => state.value?.dob ?? null)
+
 const dobDate = computed(() => {
-  if (state.value === null) return null
-  return new Date(state.value.dob)
+  if (dobString.value === null) return null
+  return new Date(dobString.value)
 })
 
 const currentIndex = computed(() => {
@@ -78,7 +80,7 @@ defineExpose({ scrollToCurrent })
       v-for="i in indices"
       :id="i === currentIndex ? 'current-week' : undefined"
       :key="i"
-      v-memo="[i === currentIndex, markFor(i), whisperFor(i), props.modalOpen]"
+      v-memo="[i === currentIndex, markFor(i), whisperFor(i), props.modalOpen, dobString]"
       :index="i"
       :state="getState(i)"
       :hover-text="getHoverText(i)"

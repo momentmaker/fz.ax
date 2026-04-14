@@ -29,9 +29,5 @@ export function isSingleGrapheme(value: string): boolean {
  */
 export function graphemeCount(value: string): number {
   if (value === '') return 0
-  let count = 0
-  for (const _ of segmenter.segment(value)) {
-    count++
-  }
-  return count
+  return Array.from(segmenter.segment(value)).length
 }

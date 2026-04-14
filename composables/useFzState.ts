@@ -70,7 +70,8 @@ function assertSingleGrapheme(mark: string): void {
 }
 
 /**
- * Set a Mark on a week. Preserves any existing whisper. Writes to localStorage
+ * Set a Mark on a week. Preserves any existing whisper (and any forward-
+ * compatible fields on the existing entry) via spread. Writes to localStorage
  * immediately. Reference-replaces state at the top level — consumers should use
  * v-memo or per-hexagon computed values to avoid re-rendering all 4000 hexagons.
  */
@@ -85,8 +86,8 @@ function setMark(week: number, mark: string): void {
     weeks: {
       ...current.weeks,
       [week]: {
+        ...existing,
         mark,
-        ...(existing?.whisper !== undefined ? { whisper: existing.whisper } : {}),
         markedAt: new Date().toISOString(),
       },
     },
@@ -98,8 +99,10 @@ function setMark(week: number, mark: string): void {
 /**
  * Set a Whisper on a week. The week must already have a Mark — you cannot
  * whisper to an unmarked week (the UI never allows this, and the data would
- * be orphaned). An empty whisper string removes the whisper field but keeps
- * the Mark. Writes to localStorage immediately.
+ * be orphaned). An empty whisper string removes the whisper field while
+ * preserving the Mark and its original markedAt (removal isn't a content
+ * edit). Non-empty whispers refresh markedAt. Existing fields on the entry
+ * are preserved via spread. Writes to localStorage immediately.
  */
 function setWhisper(week: number, whisper: string): void {
   const state = ensureLoaded()
@@ -114,8 +117,8 @@ function setWhisper(week: number, whisper: string): void {
     weeks: {
       ...current.weeks,
       [week]: whisper === ''
-        ? { mark: existing.mark, markedAt: existing.markedAt }
-        : { mark: existing.mark, whisper, markedAt: new Date().toISOString() },
+        ? { ...existing, whisper: undefined }
+        : { ...existing, whisper, markedAt: new Date().toISOString() },
     },
   }
   state.value = next
@@ -153,20 +156,22 @@ function resetState(): void {
 }
 
 /**
- * The shape returned by useFzState. Exported so Stage 2+ can extend
- * it cleanly when adding setMark, setWhisper, etc.
+ * The shape returned by useFzState. Stage 1 added setDob; Stage 2 added
+ * setMark / setWhisper / clearMark; Stage 3+ will extend with setVow,
+ * writeAnnualLetter, unsealLetter, addAnchor, removeAnchor, setPref.
  *
- * Guidance for Stage 2+ implementers:
+ * Seam notes for Stage 3+ implementers:
  *
- *   1. **Validate at the composable boundary, not the call site.** `setDob`
- *      currently trusts callers because `FzDobModal.isReasonableDob` guards
- *      the UI input. Stage 2 actions (`setMark`, `setWhisper`, …) should
- *      validate their own arguments — don't rely on UI discipline.
+ *   1. **Validate at the composable boundary, not the call site.** Every
+ *      Stage 2 action (setMark/setWhisper/clearMark) does this via the
+ *      assertState / assertWeek / assertSingleGrapheme helpers. New actions
+ *      should follow the same pattern — throw loudly on invalid input,
+ *      don't silently no-op, don't trust UI discipline.
  *
  *   2. **noUncheckedIndexedAccess is enforced in this project.** Reading
  *      `state.value.weeks[i]` yields `WeekEntry | undefined`. Handle the
  *      `undefined` branch explicitly — do NOT use the `!` non-null
- *      assertion. Upsert pattern:
+ *      assertion. Upsert pattern used throughout Stage 2:
  *        state.value = {
  *          ...state.value,
  *          weeks: { ...state.value.weeks, [week]: nextEntry },
@@ -174,15 +179,17 @@ function resetState(): void {
  *
  *   3. **Reference-replace triggers all consumers.** The top-level
  *      `state.value = { ... }` pattern invalidates every consumer that
- *      reads `state.value`. For a 4000-hexagon grid this means every mark
- *      write re-renders every hexagon unless `FzGrid` uses `v-memo` or a
- *      per-hexagon computed to short-circuit equal-mark renders. Plan for
- *      this before `setMark` lands.
+ *      reads `state.value`. FzGrid uses `v-memo` on FzHexagon keyed by
+ *      `[isCurrent, mark, whisper, modalOpen]` so a single mark write
+ *      only re-renders the one hexagon whose tuple changed. New derived
+ *      UI that reads state should use the same pattern or a per-item
+ *      computed to avoid the 4000-hexagon re-render explosion.
  *
- *   4. **Deep shape validation lives in `utils/storage.ts`.** `isValidFzState`
- *      currently only checks top-level fields. Before Stage 2 reads
- *      `state.value.weeks[i].mark`, either tighten the validator to check
- *      `WeekEntry` shape or add a per-entry guard at every access site.
+ *   4. **Deep shape validation lives in `utils/storage.ts`.** Stage 2
+ *      tightened `isValidFzState` to deep-check `WeekEntry` shape. When
+ *      Stage 3+ adds new nested state (e.g. `LetterEntry`, `Preferences`
+ *      sub-fields), extend `isValidFzState` with parallel `hasValidX`
+ *      helpers so corrupt blobs are rejected at the storage boundary.
  */
 export interface UseFzStateReturn {
   state: Ref<FzState | null>
@@ -195,8 +202,8 @@ export interface UseFzStateReturn {
 
 /**
  * The composable. Returns the reactive state ref plus typed actions.
- * Later stages will add: setWhisper, clearMark, setVow,
- * writeAnnualLetter, unsealLetter, addAnchor, removeAnchor, setPref.
+ * Stage 3+ will extend `UseFzStateReturn` with setVow, writeAnnualLetter,
+ * unsealLetter, addAnchor, removeAnchor, setPref.
  */
 export function useFzState(): UseFzStateReturn {
   return {

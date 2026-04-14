@@ -30,6 +30,14 @@ function onSaved(): void {
 }
 
 function openMarkPopover(week: number): void {
+  // First-run escape: if the user dismissed FzDobModal without saving and
+  // then clicked a hexagon, there's no state to mutate. Re-open the dob
+  // modal instead of trying to open the mark popover — setMark would
+  // throw "no state loaded" and freeze the UI silently.
+  if (state.value === null) {
+    showModal.value = true
+    return
+  }
   markPopoverWeek.value = week
   markPopoverOpen.value = true
 }

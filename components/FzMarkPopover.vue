@@ -153,7 +153,7 @@ function setFirstPaletteRef(el: unknown, i: number): void {
           v-model="pendingMark"
           class="pop-one-char"
           type="text"
-          maxlength="4"
+          maxlength="16"
           placeholder="·"
           @keyup.enter="onOneCharEnter"
           @blur="onOneCharEnter"
