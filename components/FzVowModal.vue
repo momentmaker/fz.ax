@@ -56,6 +56,10 @@ function clear(): void {
 function onKeydown(event: KeyboardEvent): void {
   if (event.key === 'Enter') {
     event.preventDefault()
+    // Mirror the save button's disabled rule so pressing Enter on a
+    // whitespace-only input doesn't trigger a setVow throw + caught
+    // error message — the input simply does nothing instead.
+    if (localText.value.trim() === '') return
     save()
   }
 }

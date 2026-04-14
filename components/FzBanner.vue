@@ -33,6 +33,12 @@ function dismiss(): void {
 function showIfAppropriate(): void {
   if (banner.value === null) return
   if (state.value === null) return
+  // Single per-day gate for BOTH banner kinds: anniversary and echo
+  // share state.meta.lastEcho intentionally (per the stage 5 design
+  // spec). The user-facing concept is "did I see a temporal banner
+  // today?" — one banner per day, regardless of which kind. A user
+  // who dismisses today's anniversary doesn't get a fallback echo
+  // later, because they already received the day's reflection.
   if (state.value.meta.lastEcho === todayDateStr.value) return
   visible.value = true
   try {

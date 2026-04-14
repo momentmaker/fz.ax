@@ -48,6 +48,13 @@ const isMarked = computed(() => props.mark !== undefined)
 
 let touchStartTime = 0
 let touchMoved = false
+// Set to true by whichever path (contextmenu or touchend) emits the
+// anchor toggle for the current touch. Prevents Android double-fire:
+// on Android Chrome a long-press fires `contextmenu` BEFORE `touchend`,
+// so without this guard both onContextMenu and onTouchEnd would emit
+// anchorToggle for the same gesture, producing a net no-op (add then
+// immediately remove). Reset on touchstart for the next gesture.
+let anchorEmittedThisTouch = false
 
 function onClick(): void {
   emit('click')
@@ -58,11 +65,13 @@ function onContextMenu(event: MouseEvent): void {
   // the user gets the toggle without the dropdown.
   event.preventDefault()
   emit('anchorToggle')
+  anchorEmittedThisTouch = true
 }
 
 function onTouchStart(_event: TouchEvent): void {
   touchStartTime = Date.now()
   touchMoved = false
+  anchorEmittedThisTouch = false
 }
 
 function onTouchMove(_event: TouchEvent): void {
@@ -73,6 +82,7 @@ function onTouchMove(_event: TouchEvent): void {
 
 function onTouchEnd(_event: TouchEvent): void {
   if (touchMoved) return
+  if (anchorEmittedThisTouch) return
   if (Date.now() - touchStartTime >= 500) {
     emit('anchorToggle')
   }
