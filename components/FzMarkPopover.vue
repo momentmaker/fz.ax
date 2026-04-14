@@ -165,8 +165,10 @@ function setFirstPaletteRef(el: unknown, i: number): void {
         <textarea
           v-model="pendingWhisper"
           class="pop-whisper"
+          :class="{ 'pop-whisper-locked': currentEntry === null }"
           rows="3"
-          placeholder="one sentence (optional)"
+          :placeholder="currentEntry === null ? 'set a mark first' : 'one sentence (optional)'"
+          :disabled="currentEntry === null"
           @blur="onWhisperBlur"
         />
         <div class="pop-counter" :class="{ 'pop-counter-warn': pendingWhisper.length > 200 }">
@@ -320,6 +322,14 @@ function setFirstPaletteRef(el: unknown, i: number): void {
 .pop-whisper:focus-visible {
   background: #fffbe6;
   outline: none;
+}
+
+.pop-whisper-locked {
+  background: #f5f5f5;
+  color: #aaa;
+  border-color: #cccccc;
+  cursor: not-allowed;
+  font-style: normal;
 }
 
 .pop-counter {

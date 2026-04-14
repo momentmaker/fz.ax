@@ -1,5 +1,6 @@
 import type { FzState } from '../types/state'
 import { STORAGE_KEY, LEGACY_DOB_KEY } from '../types/state'
+import { totalWeeks } from '../composables/useTime'
 
 /**
  * All localStorage interaction in fz.ax goes through this module. Every
@@ -107,10 +108,17 @@ function hasValidWeeks(weeks: unknown): weeks is Record<number, { mark: string; 
   }
   for (const [key, entry] of Object.entries(weeks as Record<string, unknown>)) {
     if (!/^\d+$/.test(key)) return false
+    // Reject indices outside the renderable grid window so hand-edited
+    // localStorage can't poison the state with orphan entries.
+    const n = Number(key)
+    if (!Number.isFinite(n) || n >= totalWeeks) return false
     if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) return false
     const e = entry as Record<string, unknown>
     if (typeof e.mark !== 'string' || e.mark === '') return false
     if (typeof e.markedAt !== 'string') return false
+    // Lightweight ISO-ish parse check — usePalette feeds markedAt into
+    // new Date(...).getTime() and would produce NaN scores otherwise.
+    if (Number.isNaN(new Date(e.markedAt).getTime())) return false
     if (e.whisper !== undefined && typeof e.whisper !== 'string') return false
   }
   return true

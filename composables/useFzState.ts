@@ -92,8 +92,10 @@ function setMark(week: number, mark: string): void {
       },
     },
   }
+  if (!writeState(next)) {
+    throw new Error('useFzState: failed to persist state (storage disabled or quota exceeded)')
+  }
   state.value = next
-  writeState(next)
 }
 
 /**
@@ -121,8 +123,10 @@ function setWhisper(week: number, whisper: string): void {
         : { ...existing, whisper, markedAt: new Date().toISOString() },
     },
   }
+  if (!writeState(next)) {
+    throw new Error('useFzState: failed to persist state (storage disabled or quota exceeded)')
+  }
   state.value = next
-  writeState(next)
 }
 
 /**
@@ -142,8 +146,10 @@ function clearMark(week: number): void {
     }
   }
   const next: FzState = { ...current, weeks: nextWeeks }
+  if (!writeState(next)) {
+    throw new Error('useFzState: failed to persist state (storage disabled or quota exceeded)')
+  }
   state.value = next
-  writeState(next)
 }
 
 /**
