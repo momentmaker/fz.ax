@@ -106,9 +106,19 @@ function toggleQuietMode(): void {
 }
 
 function onEscape(): void {
-  // Cascade: close the highest-priority overlay first
+  // Cascade: close the highest-priority overlay first.
+  // FzMarkPopover and FzSundayModal have their own @keydown="onKey"
+  // handlers that close on Escape via the locally-focused input. They
+  // are still in this cascade as a safety net for cases where focus is
+  // not inside the modal (e.g., user clicked the backdrop's edge first).
   if (searchOpen.value) {
     closeSearch()
+    return
+  }
+  if (showModal.value) {
+    // FzDobModal has no local Escape handler — it relies on this
+    // cascade. Close it via the same path the backdrop click uses.
+    closeModal()
     return
   }
   if (vowModalOpen.value) {

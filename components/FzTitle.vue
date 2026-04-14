@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useFzState } from '../composables/useFzState'
+import { useToday } from '../composables/useToday'
 import { pastCount, futureCount } from '../composables/useTime'
 
 const emit = defineEmits<{
@@ -10,7 +11,7 @@ const emit = defineEmits<{
 }>()
 
 const { state } = useFzState()
-const today = ref(new Date())
+const { today } = useToday()
 
 const dobDate = computed(() => {
   if (state.value === null) return null

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
 import { useFzState } from '../composables/useFzState'
+import { useToday } from '../composables/useToday'
 import { currentGridIndex, weekRange } from '../composables/useTime'
 import { isSingleGrapheme } from '../utils/grapheme'
 import { sundayDateString } from '../composables/useSunday'
@@ -15,7 +16,7 @@ const emit = defineEmits<{
 }>()
 
 const { state, setMark, setWhisper, setLastSundayPrompt } = useFzState()
-const today = ref(new Date())
+const { today } = useToday()
 
 const oneCharInput = ref<HTMLInputElement | null>(null)
 

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, nextTick } from 'vue'
+import { computed, onMounted, nextTick } from 'vue'
 import { useFzState } from '../composables/useFzState'
 import { useHighlight } from '../composables/useHighlight'
+import { useToday } from '../composables/useToday'
 import { currentGridIndex, weekRange, totalWeeks } from '../composables/useTime'
 
 interface Props {
@@ -19,7 +20,7 @@ const emit = defineEmits<{
 
 const { state, addAnchor, removeAnchor } = useFzState()
 const highlight = useHighlight()
-const today = ref(new Date())
+const { today } = useToday()
 
 const indices: number[] = Array.from({ length: totalWeeks }, (_, i) => i)
 

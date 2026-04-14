@@ -2,6 +2,7 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import { useFzState } from '../composables/useFzState'
 import { useHighlight } from '../composables/useHighlight'
+import { useToday } from '../composables/useToday'
 import { usePalette } from '../composables/usePalette'
 import { weekRange } from '../composables/useTime'
 import { isSingleGrapheme } from '../utils/grapheme'
@@ -17,7 +18,7 @@ const emit = defineEmits<{
 }>()
 
 const { state, setMark, setWhisper, clearMark } = useFzState()
-const today = ref(new Date())
+const { today } = useToday()
 const palette = usePalette(state, today)
 const highlight = useHighlight()
 
