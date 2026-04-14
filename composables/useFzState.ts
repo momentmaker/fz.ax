@@ -2,6 +2,8 @@ import { ref, type Ref } from 'vue'
 import type { FzState } from '../types/state'
 import { writeState, clearState } from '../utils/storage'
 import { migrate, createFreshState } from '../utils/migrate'
+import { totalWeeks } from './useTime'
+import { isSingleGrapheme } from '../utils/grapheme'
 
 /**
  * The single global state singleton. Declared at module scope so every
@@ -33,6 +35,64 @@ function setDob(dob: string): void {
     state.value = { ...state.value, dob }
   }
   writeState(state.value)
+}
+
+/**
+ * Assert the loaded state is non-null, returning a type-narrowed reference
+ * suitable for mutation. Throws if called before any dob is set — the Stage 2
+ * action surface refuses to operate on an uninitialized state rather than
+ * silently creating one (which would lose the user's expectation).
+ */
+function assertState(): FzState {
+  const state = ensureLoaded()
+  if (state.value === null) {
+    throw new Error('useFzState: no state loaded — call setDob first')
+  }
+  return state.value
+}
+
+/**
+ * Assert `week` is a valid grid index. Throws otherwise.
+ */
+function assertWeek(week: number): void {
+  if (!Number.isInteger(week) || week < 0 || week >= totalWeeks) {
+    throw new Error(`useFzState: week index ${week} is out of range [0, ${totalWeeks})`)
+  }
+}
+
+/**
+ * Assert `mark` is exactly one grapheme cluster. Throws otherwise.
+ */
+function assertSingleGrapheme(mark: string): void {
+  if (!isSingleGrapheme(mark)) {
+    throw new Error(`useFzState: mark must be exactly one grapheme cluster, got "${mark}"`)
+  }
+}
+
+/**
+ * Set a Mark on a week. Preserves any existing whisper. Writes to localStorage
+ * immediately. Reference-replaces state at the top level — consumers should use
+ * v-memo or per-hexagon computed values to avoid re-rendering all 4000 hexagons.
+ */
+function setMark(week: number, mark: string): void {
+  const state = ensureLoaded()
+  const current = assertState()
+  assertWeek(week)
+  assertSingleGrapheme(mark)
+  const existing = current.weeks[week]
+  const next: FzState = {
+    ...current,
+    weeks: {
+      ...current.weeks,
+      [week]: {
+        mark,
+        ...(existing?.whisper !== undefined ? { whisper: existing.whisper } : {}),
+        markedAt: new Date().toISOString(),
+      },
+    },
+  }
+  state.value = next
+  writeState(next)
 }
 
 /**
@@ -79,18 +139,20 @@ function resetState(): void {
 export interface UseFzStateReturn {
   state: Ref<FzState | null>
   setDob: (dob: string) => void
+  setMark: (week: number, mark: string) => void
   resetState: () => void
 }
 
 /**
  * The composable. Returns the reactive state ref plus typed actions.
- * Later stages will add: setMark, setWhisper, clearMark, setVow,
+ * Later stages will add: setWhisper, clearMark, setVow,
  * writeAnnualLetter, unsealLetter, addAnchor, removeAnchor, setPref.
  */
 export function useFzState(): UseFzStateReturn {
   return {
     state: ensureLoaded(),
     setDob,
+    setMark,
     resetState,
   }
 }

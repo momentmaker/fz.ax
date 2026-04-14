@@ -121,4 +121,118 @@ describe('useFzState', () => {
     // #then both calls share the same ref (singleton semantics)
     expect(a.state).toBe(b.state)
   })
+
+  describe('setMark', () => {
+    it('throws when state is null (no dob set yet)', () => {
+      // #given no prior state
+      const { setMark } = useFzState()
+      // #when setMark is called
+      // #then it throws because there's no state to mutate
+      expect(() => setMark(100, '❤')).toThrow(/no state/i)
+    })
+
+    it('sets a mark on a fresh week', () => {
+      // #given a state with a dob but no marks
+      const { state, setDob, setMark } = useFzState()
+      setDob('1990-05-15')
+      // #when we mark week 100 with a heart
+      setMark(100, '❤')
+      // #then the week now has that mark
+      const entry = state.value!.weeks[100]
+      expect(entry).not.toBeUndefined()
+      expect(entry!.mark).toBe('❤')
+      expect(typeof entry!.markedAt).toBe('string')
+    })
+
+    it('persists the mark to localStorage', () => {
+      // #given a state with a dob
+      const { setDob, setMark } = useFzState()
+      setDob('1990-05-15')
+      // #when we mark a week
+      setMark(100, '❤')
+      // #then the mark is in localStorage
+      const raw = localStorage.getItem(STORAGE_KEY)
+      expect(raw).not.toBeNull()
+      const parsed = JSON.parse(raw!)
+      expect(parsed.weeks[100].mark).toBe('❤')
+    })
+
+    it('overwrites an existing mark but preserves the whisper', () => {
+      // #given a state with a marked and whispered week (seeded via localStorage)
+      const persisted = {
+        version: 1,
+        dob: '1990-05-15',
+        weeks: {
+          100: {
+            mark: '❤',
+            whisper: 'first kiss',
+            markedAt: '2025-01-01T00:00:00.000Z',
+          },
+        },
+        vow: null,
+        letters: [],
+        anchors: [],
+        prefs: { theme: 'auto', pushOptIn: false, reducedMotion: 'auto', weekStart: 'mon' },
+        meta: { createdAt: '2025-01-01T00:00:00.000Z' },
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted))
+      const { state, setMark } = useFzState()
+      // #when we change the mark
+      setMark(100, '☀')
+      // #then the mark is new but the whisper stays
+      const entry = state.value!.weeks[100]
+      expect(entry!.mark).toBe('☀')
+      expect(entry!.whisper).toBe('first kiss')
+    })
+
+    it('throws for a negative week index', () => {
+      // #given a state with a dob
+      const { setDob, setMark } = useFzState()
+      setDob('1990-05-15')
+      // #then setMark rejects negative week indices
+      expect(() => setMark(-1, '❤')).toThrow(/week/i)
+    })
+
+    it('throws for a week index >= totalWeeks', () => {
+      // #given a state with a dob
+      const { setDob, setMark } = useFzState()
+      setDob('1990-05-15')
+      // #then setMark rejects indices beyond the grid
+      expect(() => setMark(4000, '❤')).toThrow(/week/i)
+    })
+
+    it('throws for a non-integer week index', () => {
+      // #given a state with a dob
+      const { setDob, setMark } = useFzState()
+      setDob('1990-05-15')
+      // #then setMark rejects non-integer indices
+      expect(() => setMark(1.5, '❤')).toThrow(/week/i)
+    })
+
+    it('throws for an empty mark', () => {
+      // #given a state with a dob
+      const { setDob, setMark } = useFzState()
+      setDob('1990-05-15')
+      // #then setMark rejects an empty-string mark
+      expect(() => setMark(100, '')).toThrow(/mark/i)
+    })
+
+    it('throws for a multi-character mark', () => {
+      // #given a state with a dob
+      const { setDob, setMark } = useFzState()
+      setDob('1990-05-15')
+      // #then setMark rejects a two-character mark
+      expect(() => setMark(100, 'ab')).toThrow(/mark/i)
+    })
+
+    it('accepts a ZWJ-sequence emoji as a single grapheme', () => {
+      // #given a state with a dob
+      const { state, setDob, setMark } = useFzState()
+      setDob('1990-05-15')
+      // #when we mark with a family emoji (1 user-perceived char, 8 code units)
+      setMark(100, '👨‍👩‍👧')
+      // #then it is accepted
+      expect(state.value!.weeks[100]!.mark).toBe('👨‍👩‍👧')
+    })
+  })
 })
