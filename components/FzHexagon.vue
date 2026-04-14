@@ -126,6 +126,21 @@ function onTouchEnd(_event: TouchEvent): void {
   cursor: pointer;
   position: relative;
   color: #0847F7;
+  /*
+   * Suppress iOS Safari's native long-press callout ("Copy / Look Up
+   * / Share") on hexagons. Without this, a long-press on iPhone shows
+   * the callout BEFORE our 500ms touchend fires, then iOS's contextmenu
+   * fires AFTER the user dismisses the callout — which would
+   * double-emit anchorToggle (touchend then contextmenu) and net to no
+   * change. With the callout suppressed, contextmenu doesn't fire from
+   * touch on iOS, and the existing anchorEmittedThisTouch guard handles
+   * Android's contextmenu-before-touchend ordering correctly.
+   * Hexagons aren't text content, so disabling the selection callout
+   * loses nothing.
+   */
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .hexagon.marked {
