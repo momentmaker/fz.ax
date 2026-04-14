@@ -87,6 +87,12 @@ export function usePwa(): UsePwaReturn {
 
   let deferredPrompt: InstallPromptEvent | null = null
   let registration: ServiceWorkerRegistration | null = null
+  // Inflight dedupe: if two callers await register() concurrently
+  // before navigator.serviceWorker.register resolves, both would see
+  // `registration === null` and each would kick off a parallel
+  // register + scheduleSundayPush. Storing the promise here lets
+  // subsequent callers await the same inflight work instead.
+  let registrationPromise: Promise<ServiceWorkerRegistration | null> | null = null
 
   if (typeof window !== 'undefined') {
     window.addEventListener('beforeinstallprompt', (event) => {
@@ -122,20 +128,25 @@ export function usePwa(): UsePwaReturn {
       return null
     }
     if (registration !== null) return registration
-    try {
-      registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
-      // If the user already opted in on a prior visit, re-schedule now.
-      const { state } = useFzState()
-      if (supportsPush && state.value?.prefs.pushOptIn === true && Notification.permission === 'granted') {
-        pushEnabled.value = true
-        await scheduleSundayPush(registration)
+    if (registrationPromise !== null) return registrationPromise
+    registrationPromise = (async () => {
+      try {
+        const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
+        registration = reg
+        // If the user already opted in on a prior visit, re-schedule now.
+        const { state } = useFzState()
+        if (supportsPush && state.value?.prefs.pushOptIn === true && Notification.permission === 'granted') {
+          pushEnabled.value = true
+          await scheduleSundayPush(reg)
+        }
+        return reg
       }
-      return registration
-    }
-    catch {
-      registration = null
-      return null
-    }
+      catch {
+        registration = null
+        return null
+      }
+    })()
+    return registrationPromise
   }
 
   async function enablePush(): Promise<void> {

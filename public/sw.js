@@ -70,7 +70,21 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy))
           return response
         })
-        .catch(() => caches.match(request).then((cached) => cached || caches.match('/'))),
+        .catch(() =>
+          caches.match(request)
+            .then((cached) => cached ?? caches.match('/'))
+            // The terminal fallback: if a user hits navigate while
+            // offline AND the install precache hasn't completed (e.g.,
+            // SW waiting state during an update, or interrupted first
+            // install), both matches return undefined and respondWith
+            // would crash. Return an explicit 503 so the browser shows
+            // a real response instead of a network error.
+            .then((cached) => cached ?? new Response('offline', {
+              status: 503,
+              statusText: 'Service Unavailable',
+              headers: { 'Content-Type': 'text/plain' },
+            })),
+        ),
     )
     return
   }
