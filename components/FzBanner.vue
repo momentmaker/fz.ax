@@ -2,11 +2,12 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useFzState } from '../composables/useFzState'
 import { useTodaysBanner } from '../composables/useTodaysBanner'
+import { useToday } from '../composables/useToday'
 import { weekRange } from '../composables/useTime'
 import { localDateString } from '../utils/date'
 
 const { state, setLastEcho } = useFzState()
-const today = ref(new Date())
+const { today } = useToday()
 const banner = useTodaysBanner(state, today)
 
 const visible = ref(false)

@@ -4,6 +4,7 @@ import { useFzState } from '../composables/useFzState'
 import { usePwa } from '../composables/usePwa'
 import { useKeyboard } from '../composables/useKeyboard'
 import { useHighlight } from '../composables/useHighlight'
+import { useToday } from '../composables/useToday'
 import { shouldPromptToday } from '../composables/useSunday'
 import { weekIndex } from '../composables/useTime'
 import { currentSolsticeOrEquinox, getSolsticeLabel, type SolsticeKind } from '../utils/solstice'
@@ -12,6 +13,7 @@ const { state, setLastVisitedWeek } = useFzState()
 const { register: registerPwa } = usePwa()
 const keyboard = useKeyboard()
 const highlight = useHighlight()
+const { today } = useToday()
 const showModal = ref(false)
 const gridRef = ref<{ scrollToCurrent: () => void } | null>(null)
 
@@ -23,7 +25,6 @@ const vowModalOpen = ref(false)
 const searchOpen = ref(false)
 const quietMode = ref(false)
 const weeksPassedGap = ref<number | null>(null)
-const today = ref(new Date())
 
 const solsticeKind = computed<SolsticeKind | null>(() => currentSolsticeOrEquinox(today.value))
 const solsticeLabel = computed(() => {
@@ -139,6 +140,11 @@ function scheduleNextMondayTransition(): void {
   if (mondayTimer !== null) clearTimeout(mondayTimer)
   const wait = msUntilNextMonday(new Date())
   mondayTimer = setTimeout(() => {
+    // Defensive: when the timer fires, refresh today regardless and
+    // re-schedule. If the timer fires "early" for any reason (DST
+    // edge, system clock adjustment, suspended timer fired late),
+    // the next scheduleNextMondayTransition call recomputes the wait
+    // from the current real time, so we self-correct on the next loop.
     today.value = new Date()
     scheduleNextMondayTransition()
   }, wait)

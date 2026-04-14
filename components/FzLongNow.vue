@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useToday } from '../composables/useToday'
 
-const year = computed(() => new Date().getFullYear())
+// Read the year from the shared today ref so the footer ticks over
+// to the new year when the tab is open across midnight Dec 31 →
+// Jan 1. Without this, computed(() => new Date().getFullYear()) has
+// no reactive dep, computes once, and stays stale forever.
+const { today } = useToday()
+const year = computed(() => today.value.getFullYear())
 </script>
 
 <template>
