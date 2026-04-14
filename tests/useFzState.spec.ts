@@ -564,4 +564,90 @@ describe('useFzState', () => {
       expect(state.value!.vow).toBeNull()
     })
   })
+
+  describe('addAnchor', () => {
+    it('throws when state is null', () => {
+      const { addAnchor } = useFzState()
+      expect(() => addAnchor(50)).toThrow(/no state/i)
+    })
+
+    it('throws on out-of-range week', () => {
+      const { setDob, addAnchor } = useFzState()
+      setDob('1990-05-15')
+      expect(() => addAnchor(-1)).toThrow(/out of range/i)
+      expect(() => addAnchor(4000)).toThrow(/out of range/i)
+    })
+
+    it('throws on non-integer week', () => {
+      const { setDob, addAnchor } = useFzState()
+      setDob('1990-05-15')
+      expect(() => addAnchor(50.5)).toThrow(/out of range/i)
+    })
+
+    it('adds the first anchor', () => {
+      const { state, setDob, addAnchor } = useFzState()
+      setDob('1990-05-15')
+      addAnchor(100)
+      expect(state.value!.anchors).toEqual([100])
+    })
+
+    it('inserts in sorted order', () => {
+      const { state, setDob, addAnchor } = useFzState()
+      setDob('1990-05-15')
+      addAnchor(200)
+      addAnchor(50)
+      addAnchor(150)
+      expect(state.value!.anchors).toEqual([50, 150, 200])
+    })
+
+    it('is idempotent (adding an existing anchor is a no-op)', () => {
+      const { state, setDob, addAnchor } = useFzState()
+      setDob('1990-05-15')
+      addAnchor(100)
+      addAnchor(100)
+      expect(state.value!.anchors).toEqual([100])
+    })
+
+    it('preserves other state fields', () => {
+      const { state, setDob, setMark, addAnchor } = useFzState()
+      setDob('1990-05-15')
+      setMark(42, 'x')
+      addAnchor(42)
+      expect(state.value!.weeks[42]?.mark).toBe('x')
+      expect(state.value!.anchors).toEqual([42])
+    })
+  })
+
+  describe('removeAnchor', () => {
+    it('throws when state is null', () => {
+      const { removeAnchor } = useFzState()
+      expect(() => removeAnchor(50)).toThrow(/no state/i)
+    })
+
+    it('removes an existing anchor', () => {
+      const { state, setDob, addAnchor, removeAnchor } = useFzState()
+      setDob('1990-05-15')
+      addAnchor(50)
+      addAnchor(100)
+      removeAnchor(50)
+      expect(state.value!.anchors).toEqual([100])
+    })
+
+    it('is idempotent (removing a non-existent anchor is a no-op)', () => {
+      const { state, setDob, removeAnchor } = useFzState()
+      setDob('1990-05-15')
+      expect(() => removeAnchor(100)).not.toThrow()
+      expect(state.value!.anchors).toEqual([])
+    })
+
+    it('preserves sortedness after removal', () => {
+      const { state, setDob, addAnchor, removeAnchor } = useFzState()
+      setDob('1990-05-15')
+      addAnchor(50)
+      addAnchor(100)
+      addAnchor(200)
+      removeAnchor(100)
+      expect(state.value!.anchors).toEqual([50, 200])
+    })
+  })
 })

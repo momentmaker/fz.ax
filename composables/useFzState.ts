@@ -242,6 +242,40 @@ function clearVow(): void {
 }
 
 /**
+ * Add a week to the anchors list. Maintains sorted ascending order
+ * and uniqueness — a no-op if the week is already anchored. Throws
+ * on out-of-range or non-integer week.
+ */
+function addAnchor(week: number): void {
+  const state = ensureLoaded()
+  const current = assertState()
+  assertWeek(week)
+  if (current.anchors.includes(week)) return
+  const next = [...current.anchors, week].sort((a, b) => a - b)
+  const nextState: FzState = { ...current, anchors: next }
+  if (!writeState(nextState)) {
+    throw new Error('useFzState: failed to persist state (storage disabled or quota exceeded)')
+  }
+  state.value = nextState
+}
+
+/**
+ * Remove a week from the anchors list. Idempotent — removing a
+ * non-anchored week is a successful no-op.
+ */
+function removeAnchor(week: number): void {
+  const state = ensureLoaded()
+  const current = assertState()
+  if (!current.anchors.includes(week)) return
+  const next = current.anchors.filter((a) => a !== week)
+  const nextState: FzState = { ...current, anchors: next }
+  if (!writeState(nextState)) {
+    throw new Error('useFzState: failed to persist state (storage disabled or quota exceeded)')
+  }
+  state.value = nextState
+}
+
+/**
  * Replace the entire state — used by the backup restore flow. Validates
  * the incoming shape via isValidFzState and throws on rejection. Works
  * even when state is currently null (populates from an external source).
@@ -313,6 +347,8 @@ export interface UseFzStateReturn {
   setPushOptIn: (value: boolean) => void
   setVow: (text: string) => void
   clearVow: () => void
+  addAnchor: (week: number) => void
+  removeAnchor: (week: number) => void
   replaceState: (next: FzState) => void
   resetState: () => void
 }
@@ -334,6 +370,8 @@ export function useFzState(): UseFzStateReturn {
     setPushOptIn,
     setVow,
     clearVow,
+    addAnchor,
+    removeAnchor,
     replaceState,
     resetState,
   }
