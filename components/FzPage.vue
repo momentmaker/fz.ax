@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { useFzState } from '../composables/useFzState'
+import { shouldPromptToday } from '../composables/useSunday'
 
 const { state } = useFzState()
 const showModal = ref(false)
@@ -9,11 +10,12 @@ const gridRef = ref<{ scrollToCurrent: () => void } | null>(null)
 const markPopoverOpen = ref(false)
 const markPopoverWeek = ref<number | null>(null)
 
+const sundayModalOpen = ref(false)
+
 const containerClasses = computed(() => ({
-  // Either modal disables grid pointer-events so the user can't click a
-  // second hexagon while the mark popover is open and silently lose any
-  // unsaved whisper typing in the popover.
-  'modal-open': showModal.value || markPopoverOpen.value,
+  // Any modal disables grid pointer-events so the user can't click a
+  // second hexagon while another modal is open.
+  'modal-open': showModal.value || markPopoverOpen.value || sundayModalOpen.value,
 }))
 
 function openModal(): void {
@@ -53,6 +55,10 @@ function closeMarkPopover(): void {
   })
 }
 
+function closeSundayModal(): void {
+  sundayModalOpen.value = false
+}
+
 const ASCII_HEXAGON = `
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣴⣾⣿⣿⣿⣶⣤⡀⠀⠀⠀⠀⣀⣤⣶⣿⣿⣿⣷⣤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -84,6 +90,11 @@ onMounted(() => {
     document.body.appendChild(document.createComment(ASCII_HEXAGON))
     w.__fzEggAdded = true
   }
+  // Stage 3 F1.1: open the Sunday Whisper modal if today is Sunday
+  // evening and we haven't already prompted for today.
+  if (shouldPromptToday(state.value, new Date())) {
+    sundayModalOpen.value = true
+  }
 })
 </script>
 
@@ -100,7 +111,7 @@ onMounted(() => {
     />
     <FzGrid
       ref="gridRef"
-      :modal-open="showModal || markPopoverOpen"
+      :modal-open="showModal || markPopoverOpen || sundayModalOpen"
       @hex-click="openMarkPopover"
     />
     <FzMarkPopover
@@ -108,8 +119,16 @@ onMounted(() => {
       :week-index="markPopoverWeek"
       @close="closeMarkPopover"
     />
+    <FzSundayModal
+      :open="sundayModalOpen"
+      @close="closeSundayModal"
+    />
+    <FzEcho />
+    <FzLibrary />
   </div>
   <FzScrollHex />
+  <FzToolbar />
+  <FzEasterEgg />
 </template>
 
 <style scoped>
