@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, nextTick } from 'vue'
 import { useFzState } from '../composables/useFzState'
+import { useHighlight } from '../composables/useHighlight'
 import { currentGridIndex, weekRange, totalWeeks } from '../composables/useTime'
 
 interface Props {
@@ -16,7 +17,8 @@ const emit = defineEmits<{
   hexClick: [week: number]
 }>()
 
-const { state } = useFzState()
+const { state, addAnchor, removeAnchor } = useFzState()
+const highlight = useHighlight()
 const today = ref(new Date())
 
 const indices: number[] = Array.from({ length: totalWeeks }, (_, i) => i)
@@ -54,6 +56,32 @@ function whisperFor(index: number): string | undefined {
   return state.value?.weeks[index]?.whisper
 }
 
+const litSet = computed(() => highlight.lit.value)
+const isHighlightActive = computed(() => highlight.isActive.value)
+
+function isLit(index: number): boolean {
+  return litSet.value.has(index)
+}
+
+function isAnchored(index: number): boolean {
+  return state.value?.anchors.includes(index) ?? false
+}
+
+function onAnchorToggle(index: number): void {
+  if (state.value === null) return
+  try {
+    if (isAnchored(index)) {
+      removeAnchor(index)
+    }
+    else {
+      addAnchor(index)
+    }
+  }
+  catch {
+    // throw-and-close: writeState failure is recoverable on next try
+  }
+}
+
 function onHexClick(index: number): void {
   emit('hexClick', index)
 }
@@ -80,14 +108,18 @@ defineExpose({ scrollToCurrent })
       v-for="i in indices"
       :id="i === currentIndex ? 'current-week' : undefined"
       :key="i"
-      v-memo="[i === currentIndex, markFor(i), whisperFor(i), props.modalOpen, dobString]"
+      v-memo="[i === currentIndex, markFor(i), whisperFor(i), props.modalOpen, dobString, isLit(i), isHighlightActive, isAnchored(i)]"
       :index="i"
       :state="getState(i)"
       :hover-text="getHoverText(i)"
       :mark="markFor(i)"
       :whisper="whisperFor(i)"
       :modal-open="props.modalOpen"
+      :lit="isLit(i)"
+      :dim="isHighlightActive && !isLit(i)"
+      :anchored="isAnchored(i)"
       @click="onHexClick(i)"
+      @anchor-toggle="onAnchorToggle(i)"
     />
   </div>
 </template>
