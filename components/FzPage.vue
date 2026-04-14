@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { useFzState } from '../composables/useFzState'
+import { usePwa } from '../composables/usePwa'
 import { shouldPromptToday } from '../composables/useSunday'
 
 const { state } = useFzState()
+const { register: registerPwa } = usePwa()
 const showModal = ref(false)
 const gridRef = ref<{ scrollToCurrent: () => void } | null>(null)
 
@@ -95,6 +97,11 @@ onMounted(() => {
   if (shouldPromptToday(state.value, new Date())) {
     sundayModalOpen.value = true
   }
+  // Stage 4 F1.6: register the service worker so future visits are
+  // installable and offline-capable. This also handles push
+  // re-scheduling if the user previously opted in (usePwa's register
+  // reads prefs.pushOptIn and calls scheduleSundayPush on success).
+  void registerPwa()
 })
 </script>
 
