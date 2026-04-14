@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, afterAll, vi } from 'vitest'
 import {
   readState,
   writeState,
@@ -201,6 +201,123 @@ describe('storage', () => {
   })
 })
 
+describe('storage validation: vow', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
+  it('accepts a state with vow === null', () => {
+    // #given a v1 state with vow null
+    const ok = { ...sampleState, vow: null }
+    writeState(ok)
+    // #then it loads
+    expect(readState()).not.toBeNull()
+  })
+
+  it('accepts a state with a valid VowEntry', () => {
+    // #given a state with a real vow
+    const ok = {
+      ...sampleState,
+      vow: { text: 'be more present', writtenAt: '2026-01-01T00:00:00.000Z' },
+    }
+    writeState(ok)
+    // #then it loads
+    const loaded = readState()
+    expect(loaded?.vow?.text).toBe('be more present')
+  })
+
+  it('rejects a vow with empty text', () => {
+    const bad = {
+      ...sampleState,
+      vow: { text: '', writtenAt: '2026-01-01T00:00:00.000Z' },
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    expect(readState()).toBeNull()
+  })
+
+  it('rejects a vow with text > 240 chars', () => {
+    const bad = {
+      ...sampleState,
+      vow: { text: 'x'.repeat(241), writtenAt: '2026-01-01T00:00:00.000Z' },
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    expect(readState()).toBeNull()
+  })
+
+  it('rejects a vow with a non-string text', () => {
+    const bad = {
+      ...sampleState,
+      vow: { text: 42, writtenAt: '2026-01-01T00:00:00.000Z' },
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    expect(readState()).toBeNull()
+  })
+
+  it('rejects a vow with an unparseable writtenAt', () => {
+    const bad = {
+      ...sampleState,
+      vow: { text: 'ok', writtenAt: 'not-a-date' },
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    expect(readState()).toBeNull()
+  })
+})
+
+describe('storage validation: anchors', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
+  it('accepts a state with empty anchors', () => {
+    const ok = { ...sampleState, anchors: [] }
+    writeState(ok)
+    expect(readState()).not.toBeNull()
+  })
+
+  it('accepts a sorted unique anchors array', () => {
+    const ok = { ...sampleState, anchors: [50, 100, 1500] }
+    writeState(ok)
+    const loaded = readState()
+    expect(loaded?.anchors).toEqual([50, 100, 1500])
+  })
+
+  it('rejects a non-array anchors field', () => {
+    const bad = { ...sampleState, anchors: 'not-an-array' }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    expect(readState()).toBeNull()
+  })
+
+  it('rejects an unsorted anchors array', () => {
+    const bad = { ...sampleState, anchors: [100, 50] }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    expect(readState()).toBeNull()
+  })
+
+  it('rejects a duplicate anchor', () => {
+    const bad = { ...sampleState, anchors: [50, 50] }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    expect(readState()).toBeNull()
+  })
+
+  it('rejects a negative anchor', () => {
+    const bad = { ...sampleState, anchors: [-1, 50] }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    expect(readState()).toBeNull()
+  })
+
+  it('rejects an out-of-range anchor', () => {
+    const bad = { ...sampleState, anchors: [4000] }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    expect(readState()).toBeNull()
+  })
+
+  it('rejects a non-integer anchor', () => {
+    const bad = { ...sampleState, anchors: [50.5] }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    expect(readState()).toBeNull()
+  })
+})
+
 describe('storage with a hostile localStorage', () => {
   beforeEach(() => {
     // #given a clean storage so hostile patches start from zero
@@ -209,6 +326,11 @@ describe('storage with a hostile localStorage', () => {
 
   afterEach(() => {
     // #then restore all spies so later tests see real localStorage
+    vi.restoreAllMocks()
+  })
+
+  afterAll(() => {
+    // #ensure complete cleanup after all hostile tests
     vi.restoreAllMocks()
   })
 

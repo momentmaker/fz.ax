@@ -95,9 +95,9 @@ export function isValidFzState(value: unknown): value is FzState {
     // downstream consumer (FzTitle would show NaN counters, etc).
     isReasonableDob(v.dob) &&
     hasValidWeeks(v.weeks) &&
-    (v.vow === null || typeof v.vow === 'object') &&
+    hasValidVow(v.vow) &&
     Array.isArray(v.letters) &&
-    Array.isArray(v.anchors) &&
+    hasValidAnchors(v.anchors) &&
     typeof v.prefs === 'object' && v.prefs !== null &&
     typeof v.meta === 'object' && v.meta !== null
   )
@@ -131,6 +131,39 @@ function hasValidWeeks(weeks: unknown): weeks is Record<number, { mark: string; 
     // new Date(...).getTime() and would produce NaN scores otherwise.
     if (Number.isNaN(new Date(e.markedAt).getTime())) return false
     if (e.whisper !== undefined && typeof e.whisper !== 'string') return false
+  }
+  return true
+}
+
+/**
+ * Validate the vow shape. Stage 5 introduces the vow as a single sentence
+ * (max 240 chars) plus a writtenAt timestamp. null is the unset state.
+ */
+function hasValidVow(vow: unknown): vow is { text: string; writtenAt: string } | null {
+  if (vow === null) return true
+  if (typeof vow !== 'object' || Array.isArray(vow)) return false
+  const v = vow as Record<string, unknown>
+  if (typeof v.text !== 'string') return false
+  if (v.text.length === 0 || v.text.length > 240) return false
+  if (typeof v.writtenAt !== 'string') return false
+  if (Number.isNaN(new Date(v.writtenAt).getTime())) return false
+  return true
+}
+
+/**
+ * Validate the anchors array. Stage 5 introduces anchors as a sorted-
+ * ascending, unique array of valid week indices in [0, totalWeeks).
+ * Sortedness and uniqueness are enforced here so downstream code can
+ * trust the invariant without resorting on every read.
+ */
+function hasValidAnchors(anchors: unknown): anchors is number[] {
+  if (!Array.isArray(anchors)) return false
+  let prev = -1
+  for (const a of anchors) {
+    if (!Number.isInteger(a)) return false
+    if (a < 0 || a >= totalWeeks) return false
+    if (a <= prev) return false
+    prev = a
   }
   return true
 }
