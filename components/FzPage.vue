@@ -1,11 +1,17 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useFzState } from '../composables/useFzState'
 import { usePwa } from '../composables/usePwa'
+import { useKeyboard } from '../composables/useKeyboard'
+import { useHighlight } from '../composables/useHighlight'
 import { shouldPromptToday } from '../composables/useSunday'
+import { weekIndex } from '../composables/useTime'
+import { currentSolsticeOrEquinox, getSolsticeLabel, type SolsticeKind } from '../utils/solstice'
 
-const { state } = useFzState()
+const { state, setLastVisitedWeek } = useFzState()
 const { register: registerPwa } = usePwa()
+const keyboard = useKeyboard()
+const highlight = useHighlight()
 const showModal = ref(false)
 const gridRef = ref<{ scrollToCurrent: () => void } | null>(null)
 
@@ -13,11 +19,25 @@ const markPopoverOpen = ref(false)
 const markPopoverWeek = ref<number | null>(null)
 
 const sundayModalOpen = ref(false)
+const vowModalOpen = ref(false)
+const searchOpen = ref(false)
+const quietMode = ref(false)
+const weeksPassedGap = ref<number | null>(null)
+const today = ref(new Date())
+
+const solsticeKind = computed<SolsticeKind | null>(() => currentSolsticeOrEquinox(today.value))
+const solsticeLabel = computed(() => {
+  if (solsticeKind.value === null) return ''
+  return getSolsticeLabel(solsticeKind.value, today.value.getFullYear())
+})
+
+let mondayTimer: ReturnType<typeof setTimeout> | null = null
 
 const containerClasses = computed(() => ({
   // Any modal disables grid pointer-events so the user can't click a
   // second hexagon while another modal is open.
-  'modal-open': showModal.value || markPopoverOpen.value || sundayModalOpen.value,
+  'modal-open': showModal.value || markPopoverOpen.value || sundayModalOpen.value || vowModalOpen.value,
+  'fz-quiet': quietMode.value,
 }))
 
 function openModal(): void {
@@ -61,6 +81,88 @@ function closeSundayModal(): void {
   sundayModalOpen.value = false
 }
 
+function openVowModal(): void {
+  vowModalOpen.value = true
+}
+
+function closeVowModal(): void {
+  vowModalOpen.value = false
+}
+
+function openSearch(): void {
+  // Opening search clears any active constellation
+  highlight.clear()
+  searchOpen.value = true
+}
+
+function closeSearch(): void {
+  searchOpen.value = false
+  highlight.clear()
+}
+
+function toggleQuietMode(): void {
+  quietMode.value = !quietMode.value
+}
+
+function onEscape(): void {
+  // Cascade: close the highest-priority overlay first
+  if (searchOpen.value) {
+    closeSearch()
+    return
+  }
+  if (vowModalOpen.value) {
+    closeVowModal()
+    return
+  }
+  if (markPopoverOpen.value) {
+    closeMarkPopover()
+    return
+  }
+  if (highlight.isActive.value) {
+    highlight.clear()
+    return
+  }
+  if (quietMode.value) {
+    quietMode.value = false
+  }
+}
+
+function msUntilNextMonday(from: Date): number {
+  // 0 = Sunday, 1 = Monday, ...
+  const day = from.getDay()
+  const daysUntilMonday = day === 0 ? 1 : (8 - day) % 7 || 7
+  const target = new Date(from.getFullYear(), from.getMonth(), from.getDate() + daysUntilMonday, 0, 0, 0, 0)
+  return target.getTime() - from.getTime()
+}
+
+function scheduleNextMondayTransition(): void {
+  if (mondayTimer !== null) clearTimeout(mondayTimer)
+  const wait = msUntilNextMonday(new Date())
+  mondayTimer = setTimeout(() => {
+    today.value = new Date()
+    scheduleNextMondayTransition()
+  }, wait)
+}
+
+function onVisibilityChange(): void {
+  if (document.visibilityState === 'visible') {
+    today.value = new Date()
+    scheduleNextMondayTransition()
+  }
+}
+
+function onBodyClick(event: MouseEvent): void {
+  // Click outside any hexagon clears the highlight when active.
+  if (!highlight.isActive.value) return
+  const target = event.target as HTMLElement | null
+  if (target === null) return
+  if (target.closest('.hexagon')) return
+  if (target.closest('.vow-overlay')) return
+  if (target.closest('.search-bar')) return
+  if (target.closest('.modal-content')) return
+  highlight.clear()
+}
+
 const ASCII_HEXAGON = `
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣴⣾⣿⣿⣿⣶⣤⡀⠀⠀⠀⠀⣀⣤⣶⣿⣿⣿⣷⣤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -102,23 +204,80 @@ onMounted(() => {
   // re-scheduling if the user previously opted in (usePwa's register
   // reads prefs.pushOptIn and calls scheduleSundayPush on success).
   void registerPwa()
+
+  // Stage 5: mount keyboard listener and bind shortcuts
+  keyboard.init()
+  keyboard.on('v', openVowModal)
+  keyboard.on('q', toggleQuietMode)
+  keyboard.on('/', (event) => {
+    event.preventDefault()
+    openSearch()
+  })
+  keyboard.on('escape', onEscape)
+
+  // Stage 5 F2.2: monday ceremony — after-the-fact notice
+  if (state.value !== null) {
+    const dob = new Date(state.value.dob)
+    const currentWeek = weekIndex(dob, today.value)
+    try {
+      weeksPassedGap.value = setLastVisitedWeek(currentWeek)
+    }
+    catch {
+      // throw-and-close
+    }
+  }
+
+  // Stage 5 F2.2: monday ceremony — live transition (timer + visibilitychange)
+  scheduleNextMondayTransition()
+  document.addEventListener('visibilitychange', onVisibilityChange)
+  document.addEventListener('click', onBodyClick)
 })
+
+onBeforeUnmount(() => {
+  if (mondayTimer !== null) clearTimeout(mondayTimer)
+  if (typeof document !== 'undefined') {
+    document.removeEventListener('visibilitychange', onVisibilityChange)
+    document.removeEventListener('click', onBodyClick)
+    if (solsticeKind.value !== null) {
+      document.body.classList.remove(`solstice-${solsticeKind.value}`)
+    }
+  }
+})
+
+watch(solsticeKind, (next, prev) => {
+  if (typeof document === 'undefined') return
+  if (prev !== null && prev !== undefined) {
+    document.body.classList.remove(`solstice-${prev}`)
+  }
+  if (next !== null) {
+    document.body.classList.add(`solstice-${next}`)
+  }
+}, { immediate: true })
 </script>
 
 <template>
   <div :class="['container', containerClasses]">
+    <div v-if="solsticeKind !== null" class="solstice-label">{{ solsticeLabel }}</div>
     <FzTitle
       @open-modal="openModal"
       @scroll-to-current="scrollToCurrent"
+      @open-vow="openVowModal"
     />
+    <FzMondayNotice :weeks="weeksPassedGap" />
+    <FzBanner />
+    <FzSearch :open="searchOpen" @close="closeSearch" />
     <FzDobModal
       :open="showModal"
       @close="closeModal"
       @saved="onSaved"
     />
+    <FzVowModal
+      :open="vowModalOpen"
+      @close="closeVowModal"
+    />
     <FzGrid
       ref="gridRef"
-      :modal-open="showModal || markPopoverOpen || sundayModalOpen"
+      :modal-open="showModal || markPopoverOpen || sundayModalOpen || vowModalOpen"
       @hex-click="openMarkPopover"
     />
     <FzMarkPopover
@@ -130,8 +289,8 @@ onMounted(() => {
       :open="sundayModalOpen"
       @close="closeSundayModal"
     />
-    <FzEcho />
     <FzLibrary />
+    <FzLongNow />
   </div>
   <FzScrollHex />
   <FzToolbar />
@@ -146,5 +305,28 @@ onMounted(() => {
 
 .modal-open :deep(.hexagon-grid) {
   pointer-events: none;
+}
+
+.solstice-label {
+  text-align: center;
+  font-variant: small-caps;
+  letter-spacing: 0.3em;
+  color: #F7B808;
+  font-size: 0.7rem;
+  margin-bottom: 0.5rem;
+}
+
+.fz-quiet :deep(.title),
+.fz-quiet :deep(.subtitle),
+.fz-quiet :deep(.vow-line),
+.fz-quiet :deep(.toolbar),
+.fz-quiet :deep(.library),
+.fz-quiet :deep(.long-now-footer),
+.fz-quiet > .solstice-label {
+  display: none;
+}
+
+.fz-quiet :deep(.hexagon-grid) {
+  max-width: 100vw;
 }
 </style>

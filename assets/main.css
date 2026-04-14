@@ -47,3 +47,33 @@ body {
 .toggled {
   right: 21px !important;
 }
+
+/* Stage 5 F2.5 Solstice/Equinox treatment.
+   Applied via a body class set by FzPage when the day matches one
+   of the four mile markers from utils/solstice.ts. The mood is
+   dark navy with a slowed 5.5s breathing cycle on the current week. */
+body.solstice-vernal,
+body.solstice-summer,
+body.solstice-autumnal,
+body.solstice-winter {
+  background-color: #1a1a2e;
+  background-image: none;
+  color: #f7f7f0;
+}
+
+body[class*="solstice-"] .hexagon {
+  color: #f7f7f0;
+}
+
+body[class*="solstice-"] .hexagon.current-week {
+  color: #F7B808;
+  animation-duration: 5.5s;
+}
+
+body[class*="solstice-"] .vow-line em {
+  color: #4A8EFF;
+}
+
+body[class*="solstice-"] .vow-line .vow-empty {
+  color: #444;
+}
