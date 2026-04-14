@@ -15,6 +15,11 @@
  * Hand-written, ~60 lines, legible in one sitting.
  */
 
+// Bump this string on every deploy that changes a precached file
+// (site.webmanifest, favicons, icons, or the root document). A bump
+// triggers the activate handler to delete the old cache, forcing all
+// clients to repopulate from the network. Hashed /_nuxt/* bundles
+// have content-addressed filenames, so they don't require a bump.
 const CACHE_VERSION = 'fz-ax-v1'
 
 // The pre-cache list: essential shell URLs. Hashed /_nuxt/* files are
@@ -31,11 +36,15 @@ const PRECACHE_URLS = [
 ]
 
 self.addEventListener('install', (event) => {
+  // Activate the new SW immediately once the precache is fully populated.
+  // skipWaiting is chained INTO waitUntil so the SW cannot take control
+  // and start serving fetch events before addAll resolves.
   event.waitUntil(
-    caches.open(CACHE_VERSION).then((cache) => cache.addAll(PRECACHE_URLS)),
+    caches
+      .open(CACHE_VERSION)
+      .then((cache) => cache.addAll(PRECACHE_URLS))
+      .then(() => self.skipWaiting()),
   )
-  // Activate the new SW immediately rather than waiting for all tabs to close.
-  self.skipWaiting()
 })
 
 self.addEventListener('activate', (event) => {
@@ -87,7 +96,10 @@ self.addEventListener('notificationclick', (event) => {
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
       for (const client of clients) {
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
+        // Strict origin comparison rather than substring — avoids
+        // matching any subdomain or other origin that happens to
+        // contain the site's origin as a substring.
+        if (new URL(client.url).origin === self.location.origin && 'focus' in client) {
           return client.focus()
         }
       }

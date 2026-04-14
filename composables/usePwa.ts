@@ -140,6 +140,12 @@ export function usePwa(): UsePwaReturn {
 
   async function enablePush(): Promise<void> {
     if (!supportsPush) return
+    // Guard against the first-visit race where the user hasn't set a
+    // DoB yet. setPushOptIn would throw "no state loaded" and we'd
+    // swallow the error AFTER having prompted for notification
+    // permission — confusing UX (the OS dialog came up for nothing).
+    const { state, setPushOptIn } = useFzState()
+    if (state.value === null) return
     if (Notification.permission === 'denied') {
       pushPermission.value = 'denied'
       return
@@ -149,7 +155,6 @@ export function usePwa(): UsePwaReturn {
       pushPermission.value = result
       if (result !== 'granted') return
     }
-    const { setPushOptIn } = useFzState()
     try {
       setPushOptIn(true)
     }
@@ -157,8 +162,12 @@ export function usePwa(): UsePwaReturn {
       return
     }
     pushEnabled.value = true
-    if (registration !== null) {
-      await scheduleSundayPush(registration)
+    // Race: the user may have clicked the push button before the SW
+    // registration promise resolved. Await register() (idempotent) so
+    // we always end up with a registration to schedule against.
+    const reg = registration ?? await register()
+    if (reg !== null) {
+      await scheduleSundayPush(reg)
     }
   }
 
