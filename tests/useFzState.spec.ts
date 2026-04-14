@@ -301,4 +301,53 @@ describe('useFzState', () => {
       expect(() => setWhisper(4000, 'hi')).toThrow(/week/i)
     })
   })
+
+  describe('clearMark', () => {
+    it('throws when state is null', () => {
+      // #given no prior state
+      const { clearMark } = useFzState()
+      // #then clearMark throws
+      expect(() => clearMark(100)).toThrow(/no state/i)
+    })
+
+    it('removes the entire WeekEntry', () => {
+      // #given a marked and whispered week
+      const { state, setDob, setMark, setWhisper, clearMark } = useFzState()
+      setDob('1990-05-15')
+      setMark(100, '❤')
+      setWhisper(100, 'first kiss')
+      // #when we clear
+      clearMark(100)
+      // #then the week is gone from the sparse map
+      expect(state.value!.weeks[100]).toBeUndefined()
+    })
+
+    it('persists the removal to localStorage', () => {
+      // #given a marked week
+      const { setDob, setMark, clearMark } = useFzState()
+      setDob('1990-05-15')
+      setMark(100, '❤')
+      // #when we clear
+      clearMark(100)
+      // #then localStorage no longer has the week
+      const raw = localStorage.getItem(STORAGE_KEY)
+      expect(JSON.parse(raw!).weeks[100]).toBeUndefined()
+    })
+
+    it('is a silent no-op on an unmarked week', () => {
+      // #given a state with a dob but no marks
+      const { state, setDob, clearMark } = useFzState()
+      setDob('1990-05-15')
+      // #when we clear a never-marked week
+      // #then no throw, no state change
+      expect(() => clearMark(100)).not.toThrow()
+      expect(state.value!.weeks).toEqual({})
+    })
+
+    it('throws for an out-of-range week', () => {
+      const { setDob, clearMark } = useFzState()
+      setDob('1990-05-15')
+      expect(() => clearMark(4000)).toThrow(/week/i)
+    })
+  })
 })

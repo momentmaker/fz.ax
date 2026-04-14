@@ -123,6 +123,27 @@ function setWhisper(week: number, whisper: string): void {
 }
 
 /**
+ * Remove the Mark (and any Whisper) from a week. Idempotent — calling this
+ * on an unmarked week is a silent no-op, not a throw. Writes to localStorage
+ * immediately when a mutation actually happens.
+ */
+function clearMark(week: number): void {
+  const state = ensureLoaded()
+  const current = assertState()
+  assertWeek(week)
+  if (current.weeks[week] === undefined) return
+  const nextWeeks: Record<number, FzState['weeks'][number]> = {}
+  for (const [key, entry] of Object.entries(current.weeks)) {
+    if (Number(key) !== week) {
+      nextWeeks[Number(key)] = entry
+    }
+  }
+  const next: FzState = { ...current, weeks: nextWeeks }
+  state.value = next
+  writeState(next)
+}
+
+/**
  * Wipe all state. Intended for testing and for an eventual user-facing reset.
  */
 function resetState(): void {
@@ -168,6 +189,7 @@ export interface UseFzStateReturn {
   setDob: (dob: string) => void
   setMark: (week: number, mark: string) => void
   setWhisper: (week: number, whisper: string) => void
+  clearMark: (week: number) => void
   resetState: () => void
 }
 
@@ -182,6 +204,7 @@ export function useFzState(): UseFzStateReturn {
     setDob,
     setMark,
     setWhisper,
+    clearMark,
     resetState,
   }
 }
