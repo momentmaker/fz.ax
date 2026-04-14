@@ -7,6 +7,7 @@ import {
   isCurrentWeek,
   pastCount,
   futureCount,
+  weekOfYear,
 } from '../composables/useTime'
 
 describe('weekIndex', () => {
@@ -170,5 +171,41 @@ describe('currentGridIndex', () => {
     const today = new Date('2026-01-01T00:00:00.000Z')
     // #then the grid index is clamped at 0 (via weekIndex's floor)
     expect(currentGridIndex(dob, today)).toBe(0)
+  })
+})
+
+describe('weekOfYear', () => {
+  it('returns a value in [1, 53] for any day of the year', () => {
+    // #given any day from every month
+    for (let month = 0; month < 12; month++) {
+      const d = new Date(Date.UTC(2026, month, 15, 12))
+      const w = weekOfYear(d)
+      // #then the ISO week is in the valid range
+      expect(w).toBeGreaterThanOrEqual(1)
+      expect(w).toBeLessThanOrEqual(53)
+    }
+  })
+
+  it('increments by 1 across a seven-day gap', () => {
+    // #given two dates 7 days apart mid-year
+    const d1 = new Date('2026-06-15T00:00:00.000Z')
+    const d2 = new Date('2026-06-22T00:00:00.000Z')
+    // #then weekOfYear advances by 1
+    expect(weekOfYear(d2) - weekOfYear(d1)).toBe(1)
+  })
+
+  it('is consistent within a single ISO week', () => {
+    // #given two dates on the same ISO week (mon and sun)
+    const mon = new Date('2026-06-15T00:00:00.000Z')
+    const sun = new Date('2026-06-21T00:00:00.000Z')
+    // #then both return the same weekOfYear
+    expect(weekOfYear(mon)).toBe(weekOfYear(sun))
+  })
+
+  it('returns an integer', () => {
+    // #given any date
+    const d = new Date('2026-04-14T12:00:00.000Z')
+    // #then the result is an integer
+    expect(Number.isInteger(weekOfYear(d))).toBe(true)
   })
 })

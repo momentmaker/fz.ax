@@ -71,3 +71,24 @@ export function futureCount(dob: Date, today: Date): number {
   const idx = currentGridIndex(dob, today)
   return Math.max(0, totalWeeks - 1 - idx)
 }
+
+/**
+ * ISO 8601 week-of-year (1-53). Weeks start on Monday. Week 1 is the week
+ * containing the first Thursday of the year (equivalently, the week that
+ * includes January 4). Used by useQuotes to rotate the Library quote
+ * weekly and deterministically.
+ *
+ * Reference: https://en.wikipedia.org/wiki/ISO_week_date
+ */
+export function weekOfYear(date: Date): number {
+  // Copy the date to avoid mutating the caller's.
+  const target = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
+  // Thursday in current week decides the year.
+  const dayNum = (target.getUTCDay() + 6) % 7 // Mon = 0, Sun = 6
+  target.setUTCDate(target.getUTCDate() - dayNum + 3)
+  const firstThursday = new Date(Date.UTC(target.getUTCFullYear(), 0, 4))
+  const firstDayNum = (firstThursday.getUTCDay() + 6) % 7
+  firstThursday.setUTCDate(firstThursday.getUTCDate() - firstDayNum + 3)
+  const diff = (target.getTime() - firstThursday.getTime()) / (1000 * 60 * 60 * 24)
+  return 1 + Math.round(diff / 7)
+}
