@@ -79,6 +79,8 @@ function onFileChange(event: Event): void {
 
 <template>
   <div class="toolbar">
+    <FzPushButton />
+    <FzInstallButton />
     <button
       class="tool"
       :disabled="state === null"
