@@ -23,5 +23,8 @@ logs
 .env.*
 !.env.example
 
+# Test coverage
+coverage
+
 # Brainstorming companion
 .superpowers/
