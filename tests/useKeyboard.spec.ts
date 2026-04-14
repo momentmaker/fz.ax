@@ -131,4 +131,64 @@ describe('useKeyboard', () => {
     pressKeyWith('/', { ctrl: true })
     expect(fn).not.toHaveBeenCalled()
   })
+
+  it('fires enter handler when not in an input', () => {
+    const fn = vi.fn()
+    useKeyboard().init()
+    useKeyboard().on('enter', fn)
+    pressKey('Enter')
+    expect(fn).toHaveBeenCalledOnce()
+  })
+
+  it('fires arrowup handler when not in an input', () => {
+    const fn = vi.fn()
+    useKeyboard().init()
+    useKeyboard().on('arrowup', fn)
+    pressKey('ArrowUp')
+    expect(fn).toHaveBeenCalledOnce()
+  })
+
+  it('fires arrowdown, arrowleft, arrowright handlers', () => {
+    const d = vi.fn(), l = vi.fn(), r = vi.fn()
+    useKeyboard().init()
+    useKeyboard().on('arrowdown', d)
+    useKeyboard().on('arrowleft', l)
+    useKeyboard().on('arrowright', r)
+    pressKey('ArrowDown')
+    pressKey('ArrowLeft')
+    pressKey('ArrowRight')
+    expect(d).toHaveBeenCalledOnce()
+    expect(l).toHaveBeenCalledOnce()
+    expect(r).toHaveBeenCalledOnce()
+  })
+
+  it('fires ? handler when not in an input', () => {
+    const fn = vi.fn()
+    useKeyboard().init()
+    useKeyboard().on('?', fn)
+    pressKey('?')
+    expect(fn).toHaveBeenCalledOnce()
+  })
+
+  it('does NOT fire arrow handlers when an input has focus', () => {
+    const input = document.createElement('input')
+    document.body.appendChild(input)
+    input.focus()
+    const fn = vi.fn()
+    useKeyboard().init()
+    useKeyboard().on('arrowup', fn)
+    pressKey('ArrowUp')
+    expect(fn).not.toHaveBeenCalled()
+  })
+
+  it('does NOT fire enter handler when a textarea has focus', () => {
+    const ta = document.createElement('textarea')
+    document.body.appendChild(ta)
+    ta.focus()
+    const fn = vi.fn()
+    useKeyboard().init()
+    useKeyboard().on('enter', fn)
+    pressKey('Enter')
+    expect(fn).not.toHaveBeenCalled()
+  })
 })

@@ -10,7 +10,10 @@
  * draft and predictably diverged. One file, one rule.
  */
 
-type ShortcutKey = 'v' | 'q' | '/' | 'escape'
+type ShortcutKey =
+  | 'v' | 'q' | '/' | 'escape'
+  | 'enter' | 'arrowup' | 'arrowdown' | 'arrowleft' | 'arrowright'
+  | '?'
 type Handler = (event: KeyboardEvent) => void
 
 interface UseKeyboardReturn {
@@ -27,6 +30,12 @@ const _handlers: Record<ShortcutKey, Set<Handler>> = {
   q: new Set(),
   '/': new Set(),
   escape: new Set(),
+  enter: new Set(),
+  arrowup: new Set(),
+  arrowdown: new Set(),
+  arrowleft: new Set(),
+  arrowright: new Set(),
+  '?': new Set(),
 }
 
 function isInputActive(): boolean {
@@ -45,6 +54,12 @@ function normalizeKey(rawKey: string): ShortcutKey | null {
   if (lower === 'q') return 'q'
   if (lower === '/') return '/'
   if (lower === 'escape') return 'escape'
+  if (lower === 'enter') return 'enter'
+  if (lower === 'arrowup') return 'arrowup'
+  if (lower === 'arrowdown') return 'arrowdown'
+  if (lower === 'arrowleft') return 'arrowleft'
+  if (lower === 'arrowright') return 'arrowright'
+  if (rawKey === '?') return '?'
   return null
 }
 
@@ -102,5 +117,11 @@ export function __resetUseKeyboardForTests(): void {
   _handlers.q.clear()
   _handlers['/'].clear()
   _handlers.escape.clear()
+  _handlers.enter.clear()
+  _handlers.arrowup.clear()
+  _handlers.arrowdown.clear()
+  _handlers.arrowleft.clear()
+  _handlers.arrowright.clear()
+  _handlers['?'].clear()
   _module = null
 }
