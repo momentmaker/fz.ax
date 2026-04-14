@@ -14,13 +14,27 @@ interface Props {
   whisper?: string
   /** Whether a modal is open (suppresses hover text) */
   modalOpen?: boolean
+  /** Whether this hexagon is in the active highlight set (constellation/search) */
+  lit?: boolean
+  /** Whether a highlight is active overall (so non-lit weeks dim) */
+  dim?: boolean
+  /** Whether this week is anchored as a life landmark */
+  anchored?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   mark: undefined,
   whisper: undefined,
   modalOpen: false,
+  lit: false,
+  dim: false,
+  anchored: false,
 })
+
+const emit = defineEmits<{
+  click: []
+  anchorToggle: []
+}>()
 
 const displayGlyph = computed(() => {
   if (props.mark !== undefined) return props.mark
@@ -31,6 +45,38 @@ const displayGlyph = computed(() => {
 
 const isCurrent = computed(() => props.state === 'current')
 const isMarked = computed(() => props.mark !== undefined)
+
+let touchStartTime = 0
+let touchMoved = false
+
+function onClick(): void {
+  emit('click')
+}
+
+function onContextMenu(event: MouseEvent): void {
+  // Right-click anchors. Prevent the browser's context menu so
+  // the user gets the toggle without the dropdown.
+  event.preventDefault()
+  emit('anchorToggle')
+}
+
+function onTouchStart(_event: TouchEvent): void {
+  touchStartTime = Date.now()
+  touchMoved = false
+}
+
+function onTouchMove(_event: TouchEvent): void {
+  // Any movement during the touch invalidates the long-press
+  // (the user is scrolling or dragging, not anchoring).
+  touchMoved = true
+}
+
+function onTouchEnd(_event: TouchEvent): void {
+  if (touchMoved) return
+  if (Date.now() - touchStartTime >= 500) {
+    emit('anchorToggle')
+  }
+}
 </script>
 
 <template>
@@ -39,7 +85,15 @@ const isMarked = computed(() => props.mark !== undefined)
     :class="{
       'current-week': isCurrent,
       'marked': isMarked,
+      'lit': lit,
+      'dim': dim && !lit,
+      'anchored': anchored,
     }"
+    @click="onClick"
+    @contextmenu="onContextMenu"
+    @touchstart.passive="onTouchStart"
+    @touchmove.passive="onTouchMove"
+    @touchend="onTouchEnd"
   >
     {{ displayGlyph }}
     <span
@@ -119,5 +173,40 @@ const isMarked = computed(() => props.mark !== undefined)
 
 .hide-hover-text {
   display: none;
+}
+
+.hexagon.lit {
+  outline: 1.5px solid #F7B808;
+  transform: scale(1.05);
+  transition: transform 0.4s ease-in-out, outline 0.4s ease-in-out;
+}
+
+.hexagon.dim {
+  opacity: 0.3;
+  transition: opacity 0.4s ease-in-out;
+}
+
+.hexagon.anchored {
+  outline: 3px solid #ff3b30;
+  outline-offset: 1px;
+}
+
+.hexagon.anchored.lit {
+  outline: 3px solid #ff3b30;
+  box-shadow: 0 0 0 1.5px #F7B808;
+}
+
+.hexagon.anchored:hover {
+  box-shadow: 0 0 6px #ff3b30;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hexagon.lit,
+  .hexagon.dim {
+    transition: none;
+  }
+  .hexagon.lit {
+    transform: none;
+  }
 }
 </style>
