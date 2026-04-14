@@ -73,6 +73,19 @@ function onOneCharEnter(): void {
 }
 
 function flushAndClose(): void {
+  // Flush a pending mark first. Escape-key closures don't trigger the
+  // input's @blur handler, so a mark typed but not yet committed would
+  // otherwise be lost while lastSundayPrompt gets consumed for the week.
+  // Backdrop and save-button closures pass through here too — they already
+  // triggered the blur flush, so applyMark is an idempotent no-op there.
+  if (
+    currentWeek.value !== null
+    && pendingMark.value !== ''
+    && pendingMark.value !== (currentEntry.value?.mark ?? '')
+    && isSingleGrapheme(pendingMark.value)
+  ) {
+    applyMark(pendingMark.value)
+  }
   if (
     currentWeek.value !== null
     && state.value !== null

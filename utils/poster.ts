@@ -1,5 +1,5 @@
 import type { FzState } from '../types/state'
-import { totalWeeks, weekIndex } from '../composables/useTime'
+import { totalWeeks, currentGridIndex } from '../composables/useTime'
 import { localDateString } from './date'
 
 /**
@@ -38,7 +38,9 @@ export function generatePoster(state: FzState, today: Date = new Date()): string
   const GRID_Y_START = GRID_TOP + (GRID_HEIGHT - CELL_H * ROWS) / 2
 
   const dob = new Date(state.dob)
-  const currentIdx = Number.isNaN(dob.getTime()) ? 0 : weekIndex(dob, today)
+  // Use currentGridIndex so a user past week 3999 still gets a ⏣ on the
+  // last visible cell instead of a blank "no current week anywhere" grid.
+  const currentIdx = Number.isNaN(dob.getTime()) ? 0 : currentGridIndex(dob, today)
 
   const yellow = '#F7B808'
   const blue = '#0847F7'
