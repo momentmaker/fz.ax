@@ -81,19 +81,31 @@ function onWhisperBlur(): void {
 
 function onClear(): void {
   if (props.weekIndex === null) return
-  clearMark(props.weekIndex)
+  try {
+    clearMark(props.weekIndex)
+  } catch {
+    // Storage failure (quota / disabled). The mark stays in memory but
+    // we still close the popover so the user isn't stuck.
+  }
   emit('close')
 }
 
 function onClose(): void {
-  // Flush any pending whisper edit before closing.
+  // Flush any pending whisper edit before closing. The setWhisper call can
+  // throw if storage is unavailable — we swallow the throw so emit('close')
+  // always fires; otherwise the popover would become undismissable on a
+  // device whose storage has just hit quota.
   if (
     props.weekIndex !== null
     && state.value !== null
     && state.value.weeks[props.weekIndex] !== undefined
     && pendingWhisper.value !== (state.value.weeks[props.weekIndex]?.whisper ?? '')
   ) {
-    setWhisper(props.weekIndex, pendingWhisper.value)
+    try {
+      setWhisper(props.weekIndex, pendingWhisper.value)
+    } catch {
+      // see comment above — close anyway
+    }
   }
   emit('close')
 }

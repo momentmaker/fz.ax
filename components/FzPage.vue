@@ -10,7 +10,10 @@ const markPopoverOpen = ref(false)
 const markPopoverWeek = ref<number | null>(null)
 
 const containerClasses = computed(() => ({
-  'modal-open': showModal.value,
+  // Either modal disables grid pointer-events so the user can't click a
+  // second hexagon while the mark popover is open and silently lose any
+  // unsaved whisper typing in the popover.
+  'modal-open': showModal.value || markPopoverOpen.value,
 }))
 
 function openModal(): void {
