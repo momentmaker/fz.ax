@@ -650,4 +650,59 @@ describe('useFzState', () => {
       expect(state.value!.anchors).toEqual([50, 200])
     })
   })
+
+  describe('setLastVisitedWeek', () => {
+    it('throws when state is null', () => {
+      const { setLastVisitedWeek } = useFzState()
+      expect(() => setLastVisitedWeek(100)).toThrow(/no state/i)
+    })
+
+    it('returns null on first ever load (lastVisitedWeek undefined)', () => {
+      const { state, setDob, setLastVisitedWeek } = useFzState()
+      setDob('1990-05-15')
+      // freshly created state has no lastVisitedWeek
+      expect(state.value!.meta.lastVisitedWeek).toBeUndefined()
+      const gap = setLastVisitedWeek(1500)
+      expect(gap).toBeNull()
+      // and the value IS persisted silently
+      expect(state.value!.meta.lastVisitedWeek).toBe(1500)
+    })
+
+    it('returns null and is a no-op when called with the same week', () => {
+      const { state, setDob, setLastVisitedWeek } = useFzState()
+      setDob('1990-05-15')
+      setLastVisitedWeek(1500)
+      const gap = setLastVisitedWeek(1500)
+      expect(gap).toBeNull()
+      expect(state.value!.meta.lastVisitedWeek).toBe(1500)
+    })
+
+    it('returns the positive gap and updates when forward', () => {
+      const { state, setDob, setLastVisitedWeek } = useFzState()
+      setDob('1990-05-15')
+      setLastVisitedWeek(1500)
+      const gap = setLastVisitedWeek(1503)
+      expect(gap).toBe(3)
+      expect(state.value!.meta.lastVisitedWeek).toBe(1503)
+    })
+
+    it('returns null and does not move backward when called with a smaller week', () => {
+      const { state, setDob, setLastVisitedWeek } = useFzState()
+      setDob('1990-05-15')
+      setLastVisitedWeek(1500)
+      const gap = setLastVisitedWeek(1490)
+      expect(gap).toBeNull()
+      // Importantly, lastVisitedWeek stayed at 1500 — not decremented.
+      expect(state.value!.meta.lastVisitedWeek).toBe(1500)
+    })
+
+    it('preserves other meta fields', () => {
+      const { state, setDob, setLastSundayPrompt, setLastVisitedWeek } = useFzState()
+      setDob('1990-05-15')
+      setLastSundayPrompt('2026-04-12')
+      setLastVisitedWeek(1500)
+      expect(state.value!.meta.lastSundayPrompt).toBe('2026-04-12')
+      expect(state.value!.meta.lastVisitedWeek).toBe(1500)
+    })
+  })
 })

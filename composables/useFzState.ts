@@ -276,6 +276,49 @@ function removeAnchor(week: number): void {
 }
 
 /**
+ * Update meta.lastVisitedWeek from a freshly computed current week.
+ * Returns the number of weeks that have passed since the previous
+ * recorded visit (so FzPage can show the "a week passed" notice), or
+ * null when no notice should display:
+ *
+ *   - First-ever load (lastVisitedWeek === undefined): silently set
+ *     and return null. We don't want to greet a brand-new user with
+ *     "1500 weeks passed."
+ *   - Same week as before: no-op, return null.
+ *   - Backward (the user's clock is wrong, or a DOB change made the
+ *     index numerically smaller): no-op, return null. Never write a
+ *     smaller value than the existing one.
+ *   - Forward by N: write the new value and return N.
+ */
+function setLastVisitedWeek(week: number): number | null {
+  const state = ensureLoaded()
+  const current = assertState()
+  const previous = current.meta.lastVisitedWeek
+  if (previous === undefined) {
+    const next: FzState = {
+      ...current,
+      meta: { ...current.meta, lastVisitedWeek: week },
+    }
+    if (!writeState(next)) {
+      throw new Error('useFzState: failed to persist state (storage disabled or quota exceeded)')
+    }
+    state.value = next
+    return null
+  }
+  if (week <= previous) return null
+  const gap = week - previous
+  const next: FzState = {
+    ...current,
+    meta: { ...current.meta, lastVisitedWeek: week },
+  }
+  if (!writeState(next)) {
+    throw new Error('useFzState: failed to persist state (storage disabled or quota exceeded)')
+  }
+  state.value = next
+  return gap
+}
+
+/**
  * Replace the entire state — used by the backup restore flow. Validates
  * the incoming shape via isValidFzState and throws on rejection. Works
  * even when state is currently null (populates from an external source).
@@ -349,6 +392,7 @@ export interface UseFzStateReturn {
   clearVow: () => void
   addAnchor: (week: number) => void
   removeAnchor: (week: number) => void
+  setLastVisitedWeek: (week: number) => number | null
   replaceState: (next: FzState) => void
   resetState: () => void
 }
@@ -372,6 +416,7 @@ export function useFzState(): UseFzStateReturn {
     clearVow,
     addAnchor,
     removeAnchor,
+    setLastVisitedWeek,
     replaceState,
     resetState,
   }
