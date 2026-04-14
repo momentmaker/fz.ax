@@ -1,6 +1,6 @@
 import { ref, type Ref } from 'vue'
 import type { FzState } from '../types/state'
-import { writeState, clearState } from '../utils/storage'
+import { writeState, clearState, isValidFzState } from '../utils/storage'
 import { migrate, createFreshState } from '../utils/migrate'
 import { totalWeeks } from './useTime'
 import { isSingleGrapheme } from '../utils/grapheme'
@@ -153,6 +153,56 @@ function clearMark(week: number): void {
 }
 
 /**
+ * Update meta.lastSundayPrompt. Used by the Sunday Whisper ritual to
+ * prevent re-opening the modal on the same day.
+ */
+function setLastSundayPrompt(dateStr: string): void {
+  const state = ensureLoaded()
+  const current = assertState()
+  const next: FzState = {
+    ...current,
+    meta: { ...current.meta, lastSundayPrompt: dateStr },
+  }
+  if (!writeState(next)) {
+    throw new Error('useFzState: failed to persist state (storage disabled or quota exceeded)')
+  }
+  state.value = next
+}
+
+/**
+ * Update meta.lastEcho. Used by FzEcho to mark the day as "echoed already"
+ * so the banner doesn't repeat on page reloads within the same day.
+ */
+function setLastEcho(dateStr: string): void {
+  const state = ensureLoaded()
+  const current = assertState()
+  const next: FzState = {
+    ...current,
+    meta: { ...current.meta, lastEcho: dateStr },
+  }
+  if (!writeState(next)) {
+    throw new Error('useFzState: failed to persist state (storage disabled or quota exceeded)')
+  }
+  state.value = next
+}
+
+/**
+ * Replace the entire state — used by the backup restore flow. Validates
+ * the incoming shape via isValidFzState and throws on rejection. Works
+ * even when state is currently null (populates from an external source).
+ */
+function replaceState(next: FzState): void {
+  if (!isValidFzState(next)) {
+    throw new Error('useFzState: invalid state shape in replaceState')
+  }
+  const state = ensureLoaded()
+  if (!writeState(next)) {
+    throw new Error('useFzState: failed to persist state (storage disabled or quota exceeded)')
+  }
+  state.value = next
+}
+
+/**
  * Wipe all state. Intended for testing and for an eventual user-facing reset.
  */
 function resetState(): void {
@@ -203,6 +253,9 @@ export interface UseFzStateReturn {
   setMark: (week: number, mark: string) => void
   setWhisper: (week: number, whisper: string) => void
   clearMark: (week: number) => void
+  setLastSundayPrompt: (dateStr: string) => void
+  setLastEcho: (dateStr: string) => void
+  replaceState: (next: FzState) => void
   resetState: () => void
 }
 
@@ -218,6 +271,9 @@ export function useFzState(): UseFzStateReturn {
     setMark,
     setWhisper,
     clearMark,
+    setLastSundayPrompt,
+    setLastEcho,
+    replaceState,
     resetState,
   }
 }

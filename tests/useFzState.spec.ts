@@ -350,4 +350,99 @@ describe('useFzState', () => {
       expect(() => clearMark(4000)).toThrow(/week/i)
     })
   })
+
+  describe('setLastSundayPrompt', () => {
+    it('throws when state is null', () => {
+      const { setLastSundayPrompt } = useFzState()
+      expect(() => setLastSundayPrompt('2026-04-12')).toThrow(/no state/i)
+    })
+
+    it('sets meta.lastSundayPrompt', () => {
+      const { state, setDob, setLastSundayPrompt } = useFzState()
+      setDob('1990-05-15')
+      setLastSundayPrompt('2026-04-12')
+      expect(state.value!.meta.lastSundayPrompt).toBe('2026-04-12')
+    })
+
+    it('persists to localStorage', () => {
+      const { setDob, setLastSundayPrompt } = useFzState()
+      setDob('1990-05-15')
+      setLastSundayPrompt('2026-04-12')
+      const raw = localStorage.getItem(STORAGE_KEY)
+      expect(JSON.parse(raw!).meta.lastSundayPrompt).toBe('2026-04-12')
+    })
+  })
+
+  describe('setLastEcho', () => {
+    it('throws when state is null', () => {
+      const { setLastEcho } = useFzState()
+      expect(() => setLastEcho('2026-04-14')).toThrow(/no state/i)
+    })
+
+    it('sets meta.lastEcho', () => {
+      const { state, setDob, setLastEcho } = useFzState()
+      setDob('1990-05-15')
+      setLastEcho('2026-04-14')
+      expect(state.value!.meta.lastEcho).toBe('2026-04-14')
+    })
+  })
+
+  describe('replaceState', () => {
+    it('replaces an existing state', () => {
+      const { state, setDob, replaceState } = useFzState()
+      setDob('1990-05-15')
+      const next = {
+        version: 1 as const,
+        dob: '1991-06-16',
+        weeks: {},
+        vow: null,
+        letters: [],
+        anchors: [],
+        prefs: { theme: 'auto' as const, pushOptIn: false, reducedMotion: 'auto' as const, weekStart: 'mon' as const },
+        meta: { createdAt: '2025-01-01T00:00:00.000Z' },
+      }
+      replaceState(next)
+      expect(state.value!.dob).toBe('1991-06-16')
+    })
+
+    it('works even when no prior state exists', () => {
+      const { state, replaceState } = useFzState()
+      expect(state.value).toBeNull()
+      const next = {
+        version: 1 as const,
+        dob: '1991-06-16',
+        weeks: {},
+        vow: null,
+        letters: [],
+        anchors: [],
+        prefs: { theme: 'auto' as const, pushOptIn: false, reducedMotion: 'auto' as const, weekStart: 'mon' as const },
+        meta: { createdAt: '2025-01-01T00:00:00.000Z' },
+      }
+      replaceState(next)
+      expect(state.value!.dob).toBe('1991-06-16')
+    })
+
+    it('throws on an invalid shape', () => {
+      const { replaceState } = useFzState()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect(() => replaceState({ nope: true } as any)).toThrow(/invalid/i)
+    })
+
+    it('persists the replacement', () => {
+      const { replaceState } = useFzState()
+      const next = {
+        version: 1 as const,
+        dob: '1991-06-16',
+        weeks: {},
+        vow: null,
+        letters: [],
+        anchors: [],
+        prefs: { theme: 'auto' as const, pushOptIn: false, reducedMotion: 'auto' as const, weekStart: 'mon' as const },
+        meta: { createdAt: '2025-01-01T00:00:00.000Z' },
+      }
+      replaceState(next)
+      const raw = localStorage.getItem(STORAGE_KEY)
+      expect(JSON.parse(raw!).dob).toBe('1991-06-16')
+    })
+  })
 })

@@ -79,7 +79,7 @@ export function readState(): FzState | null {
  * When Stage 2+ accesses nested fields beyond WeekEntry, extend the helper
  * below (not the top-level checker) so each sub-shape has its own validator.
  */
-function isValidFzState(value: unknown): value is FzState {
+export function isValidFzState(value: unknown): value is FzState {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
     return false
   }
