@@ -237,6 +237,61 @@ function setTheme(theme: 'auto' | 'light' | 'dark'): void {
 }
 
 /**
+ * Write an Annual Letter. Trims text, validates 1-2000 chars,
+ * validates unsealAt is ISO date format (YYYY-MM-DD). Appends
+ * a new LetterEntry with sealedAt=now, read=false to state.letters.
+ * Maintains the sorted-by-sealedAt invariant (new writes always
+ * have sealedAt >= existing entries, so append is sufficient).
+ */
+function writeAnnualLetter(text: string, unsealAt: string): void {
+  const state = ensureLoaded()
+  const current = assertState()
+  const trimmed = text.trim()
+  if (trimmed.length === 0 || trimmed.length > 2000) {
+    throw new Error('useFzState: letter text must be 1-2000 chars after trim')
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(unsealAt)) {
+    throw new Error('useFzState: unsealAt must be ISO date YYYY-MM-DD')
+  }
+  const letter: FzState['letters'][number] = {
+    text: trimmed,
+    sealedAt: new Date().toISOString(),
+    unsealAt,
+    read: false,
+  }
+  const next: FzState = {
+    ...current,
+    letters: [...current.letters, letter],
+  }
+  if (!writeState(next)) {
+    throw new Error('useFzState: failed to persist state (storage disabled or quota exceeded)')
+  }
+  state.value = next
+}
+
+/**
+ * Mark the letter with the given sealedAt as read. Idempotent —
+ * already-read letters are a no-op. Non-matching sealedAt is a
+ * no-op. Used by FzAnnualLetter when the unseal modal mounts.
+ */
+function markLetterRead(sealedAt: string): void {
+  const state = ensureLoaded()
+  const current = assertState()
+  const idx = current.letters.findIndex((l) => l.sealedAt === sealedAt)
+  if (idx === -1) return
+  const existing = current.letters[idx]
+  if (existing === undefined || existing.read === true) return
+  const next: FzState = {
+    ...current,
+    letters: current.letters.map((l, i) => (i === idx ? { ...l, read: true } : l)),
+  }
+  if (!writeState(next)) {
+    throw new Error('useFzState: failed to persist state (storage disabled or quota exceeded)')
+  }
+  state.value = next
+}
+
+/**
  * Set or replace the yearly Vow. Trims whitespace before validation.
  * Text must be 1-240 chars after trim (an empty vow is meaningless;
  * 240 chars is the soft cap that mirrors WeekEntry.whisper).
@@ -428,6 +483,8 @@ export interface UseFzStateReturn {
   setLastVisitedWeek: (week: number) => number | null
   replaceState: (next: FzState) => void
   resetState: () => void
+  writeAnnualLetter: (text: string, unsealAt: string) => void
+  markLetterRead: (sealedAt: string) => void
 }
 
 /**
@@ -453,6 +510,8 @@ export function useFzState(): UseFzStateReturn {
     setLastVisitedWeek,
     replaceState,
     resetState,
+    writeAnnualLetter,
+    markLetterRead,
   }
 }
 

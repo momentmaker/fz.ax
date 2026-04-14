@@ -783,4 +783,90 @@ describe('useFzState', () => {
       expect(state.value!.prefs.theme).toBe('dark')
     })
   })
+
+  describe('writeAnnualLetter', () => {
+    it('throws when state is null', () => {
+      const { writeAnnualLetter } = useFzState()
+      expect(() => writeAnnualLetter('hello', '2026-05-15')).toThrow(/no state/i)
+    })
+
+    it('throws on empty text', () => {
+      const { setDob, writeAnnualLetter } = useFzState()
+      setDob('1990-05-15')
+      expect(() => writeAnnualLetter('', '2026-05-15')).toThrow(/1.*2000/i)
+    })
+
+    it('throws on text longer than 2000 chars', () => {
+      const { setDob, writeAnnualLetter } = useFzState()
+      setDob('1990-05-15')
+      expect(() => writeAnnualLetter('x'.repeat(2001), '2026-05-15')).toThrow(/1.*2000/i)
+    })
+
+    it('throws on whitespace-only text', () => {
+      const { setDob, writeAnnualLetter } = useFzState()
+      setDob('1990-05-15')
+      expect(() => writeAnnualLetter('   ', '2026-05-15')).toThrow(/1.*2000/i)
+    })
+
+    it('throws on invalid unsealAt format', () => {
+      const { setDob, writeAnnualLetter } = useFzState()
+      setDob('1990-05-15')
+      expect(() => writeAnnualLetter('hello', 'not-iso')).toThrow(/unsealAt/i)
+    })
+
+    it('appends a letter with trimmed text + sealedAt + read=false', () => {
+      const { state, setDob, writeAnnualLetter } = useFzState()
+      setDob('1990-05-15')
+      writeAnnualLetter('  hello future me  ', '2026-05-15')
+      expect(state.value!.letters.length).toBe(1)
+      expect(state.value!.letters[0]?.text).toBe('hello future me')
+      expect(state.value!.letters[0]?.unsealAt).toBe('2026-05-15')
+      expect(state.value!.letters[0]?.read).toBe(false)
+      expect(typeof state.value!.letters[0]?.sealedAt).toBe('string')
+    })
+
+    it('maintains sorted order on multiple writes', () => {
+      const { state, setDob, writeAnnualLetter } = useFzState()
+      setDob('1990-05-15')
+      writeAnnualLetter('first', '2026-05-15')
+      writeAnnualLetter('second', '2027-05-15')
+      expect(state.value!.letters.length).toBe(2)
+      expect(state.value!.letters[0]?.text).toBe('first')
+      expect(state.value!.letters[1]?.text).toBe('second')
+    })
+  })
+
+  describe('markLetterRead', () => {
+    it('throws when state is null', () => {
+      const { markLetterRead } = useFzState()
+      expect(() => markLetterRead('2025-01-01T00:00:00.000Z')).toThrow(/no state/i)
+    })
+
+    it('marks the matching letter as read', () => {
+      const { state, setDob, writeAnnualLetter, markLetterRead } = useFzState()
+      setDob('1990-05-15')
+      writeAnnualLetter('hello', '2026-05-15')
+      const sealedAt = state.value!.letters[0]!.sealedAt
+      markLetterRead(sealedAt)
+      expect(state.value!.letters[0]?.read).toBe(true)
+    })
+
+    it('is idempotent (already-read is a no-op)', () => {
+      const { state, setDob, writeAnnualLetter, markLetterRead } = useFzState()
+      setDob('1990-05-15')
+      writeAnnualLetter('hello', '2026-05-15')
+      const sealedAt = state.value!.letters[0]!.sealedAt
+      markLetterRead(sealedAt)
+      expect(() => markLetterRead(sealedAt)).not.toThrow()
+      expect(state.value!.letters[0]?.read).toBe(true)
+    })
+
+    it('is a no-op for non-matching sealedAt', () => {
+      const { state, setDob, writeAnnualLetter, markLetterRead } = useFzState()
+      setDob('1990-05-15')
+      writeAnnualLetter('hello', '2026-05-15')
+      expect(() => markLetterRead('1999-01-01T00:00:00.000Z')).not.toThrow()
+      expect(state.value!.letters[0]?.read).toBe(false)
+    })
+  })
 })
