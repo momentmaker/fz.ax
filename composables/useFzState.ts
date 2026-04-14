@@ -96,6 +96,33 @@ function setMark(week: number, mark: string): void {
 }
 
 /**
+ * Set a Whisper on a week. The week must already have a Mark — you cannot
+ * whisper to an unmarked week (the UI never allows this, and the data would
+ * be orphaned). An empty whisper string removes the whisper field but keeps
+ * the Mark. Writes to localStorage immediately.
+ */
+function setWhisper(week: number, whisper: string): void {
+  const state = ensureLoaded()
+  const current = assertState()
+  assertWeek(week)
+  const existing = current.weeks[week]
+  if (existing === undefined) {
+    throw new Error(`useFzState: cannot whisper to an unmarked week ${week}; setMark first`)
+  }
+  const next: FzState = {
+    ...current,
+    weeks: {
+      ...current.weeks,
+      [week]: whisper === ''
+        ? { mark: existing.mark, markedAt: existing.markedAt }
+        : { mark: existing.mark, whisper, markedAt: new Date().toISOString() },
+    },
+  }
+  state.value = next
+  writeState(next)
+}
+
+/**
  * Wipe all state. Intended for testing and for an eventual user-facing reset.
  */
 function resetState(): void {
@@ -140,6 +167,7 @@ export interface UseFzStateReturn {
   state: Ref<FzState | null>
   setDob: (dob: string) => void
   setMark: (week: number, mark: string) => void
+  setWhisper: (week: number, whisper: string) => void
   resetState: () => void
 }
 
@@ -153,6 +181,7 @@ export function useFzState(): UseFzStateReturn {
     state: ensureLoaded(),
     setDob,
     setMark,
+    setWhisper,
     resetState,
   }
 }

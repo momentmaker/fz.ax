@@ -235,4 +235,70 @@ describe('useFzState', () => {
       expect(state.value!.weeks[100]!.mark).toBe('👨‍👩‍👧')
     })
   })
+
+  describe('setWhisper', () => {
+    it('throws when state is null', () => {
+      // #given no prior state
+      const { setWhisper } = useFzState()
+      // #then setWhisper throws
+      expect(() => setWhisper(100, 'hi')).toThrow(/no state/i)
+    })
+
+    it('throws when the week has no mark', () => {
+      // #given a state with a dob but no marks
+      const { setDob, setWhisper } = useFzState()
+      setDob('1990-05-15')
+      // #then setWhisper throws because you can't whisper to an unmarked week
+      expect(() => setWhisper(100, 'hi')).toThrow(/no mark|unmarked/i)
+    })
+
+    it('sets a whisper on a marked week', () => {
+      // #given a marked week
+      const { state, setDob, setMark, setWhisper } = useFzState()
+      setDob('1990-05-15')
+      setMark(100, '❤')
+      // #when we whisper
+      setWhisper(100, 'first kiss')
+      // #then the whisper is stored
+      expect(state.value!.weeks[100]!.whisper).toBe('first kiss')
+      expect(state.value!.weeks[100]!.mark).toBe('❤')
+    })
+
+    it('persists the whisper to localStorage', () => {
+      // #given a marked week
+      const { setDob, setMark, setWhisper } = useFzState()
+      setDob('1990-05-15')
+      setMark(100, '❤')
+      // #when we whisper
+      setWhisper(100, 'first kiss')
+      // #then localStorage reflects it
+      const raw = localStorage.getItem(STORAGE_KEY)
+      expect(JSON.parse(raw!).weeks[100].whisper).toBe('first kiss')
+    })
+
+    it('empty string removes the whisper but keeps the mark', () => {
+      // #given a marked and whispered week
+      const { state, setDob, setMark, setWhisper } = useFzState()
+      setDob('1990-05-15')
+      setMark(100, '❤')
+      setWhisper(100, 'first kiss')
+      // #when we set an empty whisper
+      setWhisper(100, '')
+      // #then the whisper is gone but the mark stays
+      expect(state.value!.weeks[100]!.whisper).toBeUndefined()
+      expect(state.value!.weeks[100]!.mark).toBe('❤')
+    })
+
+    it('throws for a non-integer week', () => {
+      const { setDob, setWhisper } = useFzState()
+      setDob('1990-05-15')
+      expect(() => setWhisper(1.5, 'hi')).toThrow(/week/i)
+    })
+
+    it('throws for a week out of range', () => {
+      const { setDob, setWhisper } = useFzState()
+      setDob('1990-05-15')
+      expect(() => setWhisper(4000, 'hi')).toThrow(/week/i)
+    })
+  })
 })
