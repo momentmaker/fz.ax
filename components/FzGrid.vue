@@ -97,6 +97,15 @@ defineExpose({ scrollToCurrent })
   display: grid;
   grid-template-columns: repeat(21, 1fr);
   grid-gap: 5px;
+  /*
+   * Each FzHexagon has width: 30px, so grid items default to
+   * justify-self: start and hug the left of their 1fr column.
+   * That produced a consistent empty strip on the right of every
+   * cell and made the whole grid look shifted left. justify-items:
+   * center puts every hex in the middle of its cell, which restores
+   * true horizontal symmetry.
+   */
+  justify-items: center;
 }
 
 @media (max-width: 1024px) {
