@@ -6,6 +6,17 @@ import { downloadBackup, parseBackup } from '../utils/backup'
 
 const { state, replaceState } = useFzState()
 const fileInput = ref<HTMLInputElement | null>(null)
+const restoreStatus = ref<'idle' | 'failed'>('idle')
+let statusTimer: ReturnType<typeof setTimeout> | null = null
+
+function flashFailed(): void {
+  restoreStatus.value = 'failed'
+  if (statusTimer !== null) clearTimeout(statusTimer)
+  statusTimer = setTimeout(() => {
+    restoreStatus.value = 'idle'
+    statusTimer = null
+  }, 3000)
+}
 
 function onPosterClick(): void {
   if (state.value === null) return
@@ -36,14 +47,30 @@ function onFileChange(event: Event): void {
   const reader = new FileReader()
   reader.onload = () => {
     const text = typeof reader.result === 'string' ? reader.result : null
-    if (text === null) return
+    if (text === null) {
+      flashFailed()
+      return
+    }
     const parsed = parseBackup(text)
-    if (parsed === null) return
+    if (parsed === null) {
+      // The file wasn't a valid fz.ax backup (wrong shape, malformed
+      // JSON, unreasonable DOB, etc). Flash a brief visible failure
+      // state so the user knows the restore was a no-op instead of
+      // silently believing it succeeded.
+      flashFailed()
+      return
+    }
     try {
       replaceState(parsed)
     } catch {
-      // ignore — validation already happened in parseBackup
+      // replaceState only throws if writeState fails (quota exceeded).
+      // The in-memory state is unchanged in that case. Flash the same
+      // failure so the user can try again or free up storage.
+      flashFailed()
     }
+  }
+  reader.onerror = () => {
+    flashFailed()
   }
   reader.readAsText(file)
   target.value = ''
@@ -68,10 +95,11 @@ function onFileChange(event: Event): void {
     >⬡</button>
     <button
       class="tool"
-      aria-label="restore backup"
-      title="restore"
+      :class="{ 'tool-failed': restoreStatus === 'failed' }"
+      :aria-label="restoreStatus === 'failed' ? 'restore failed — not a valid fz.ax backup' : 'restore backup'"
+      :title="restoreStatus === 'failed' ? 'not a valid fz.ax backup' : 'restore'"
       @click="onRestoreClick"
-    >⌗</button>
+    >{{ restoreStatus === 'failed' ? '✕' : '⌗' }}</button>
     <input
       ref="fileInput"
       type="file"
@@ -117,6 +145,12 @@ function onFileChange(event: Event): void {
 .tool:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.tool-failed {
+  color: #ff3b30;
+  border-color: #ff3b30;
+  background: #fff0ef;
 }
 
 .toolbar-file {

@@ -150,6 +150,55 @@ describe('storage', () => {
     // #then writing succeeds
     expect(writeState(sampleState)).toBe(true)
   })
+
+  it('rejects a blob where dob is not a parseable date', () => {
+    // #given a state blob with garbage in the dob field
+    const bad = { ...sampleState, dob: 'not-a-date' }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    // #then readState rejects it at the storage boundary so downstream
+    //   code never sees Invalid Date / NaN side-effects
+    expect(readState()).toBeNull()
+  })
+
+  it('rejects a blob where dob is in the future', () => {
+    // #given a state with a future dob
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+    const bad = { ...sampleState, dob: tomorrow }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    // #then readState rejects it
+    expect(readState()).toBeNull()
+  })
+
+  it('rejects a blob where dob is before 1900', () => {
+    // #given a state with a pre-1900 dob
+    const bad = { ...sampleState, dob: '1850-05-15' }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    // #then readState rejects it
+    expect(readState()).toBeNull()
+  })
+
+  it('rejects a blob where a WeekEntry.mark is multi-grapheme', () => {
+    // #given a week entry with "ab" (two graphemes) as the mark
+    const bad = {
+      ...sampleState,
+      weeks: { 100: { mark: 'ab', markedAt: '2025-01-01T00:00:00.000Z' } },
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    // #then readState rejects it — the storage validator enforces the
+    //   single-grapheme contract at the same boundary as setMark
+    expect(readState()).toBeNull()
+  })
+
+  it('accepts a valid family-emoji mark (ZWJ sequence is one grapheme)', () => {
+    // #given a state where the mark is an 8-code-unit family emoji
+    const ok = {
+      ...sampleState,
+      weeks: { 100: { mark: '👨‍👩‍👧', markedAt: '2025-01-01T00:00:00.000Z' } },
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ok))
+    // #then readState accepts it
+    expect(readState()).not.toBeNull()
+  })
 })
 
 describe('storage with a hostile localStorage', () => {

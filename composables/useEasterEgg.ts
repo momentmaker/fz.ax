@@ -28,8 +28,13 @@ export function useEasterEgg(): UseEasterEggReturn {
     const target = event.target as HTMLElement | null
     if (target !== null) {
       const tag = target.tagName
-      if (tag === 'INPUT' || tag === 'TEXTAREA') return
-      if (target.isContentEditable) return
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable) {
+        // Reset the pending sequence so typing in an input interrupts a
+        // half-formed `f`→`z` from firing after the user blurs the field.
+        lastKey = ''
+        lastKeyAt = 0
+        return
+      }
     }
 
     const key = event.key.toLowerCase()

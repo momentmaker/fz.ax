@@ -1,6 +1,8 @@
 import type { FzState } from '../types/state'
 import { STORAGE_KEY, LEGACY_DOB_KEY } from '../types/state'
 import { totalWeeks } from '../composables/useTime'
+import { isReasonableDob } from './dob'
+import { isSingleGrapheme } from './grapheme'
 
 /**
  * All localStorage interaction in fz.ax goes through this module. Every
@@ -87,6 +89,11 @@ export function isValidFzState(value: unknown): value is FzState {
   return (
     v.version === 1 &&
     typeof v.dob === 'string' &&
+    // The DOB must be parseable, in the past, and ≥ 1900. Otherwise a
+    // crafted or hand-edited backup with "not-a-date" or a year-9999
+    // future date would pass this gate and silently degrade every
+    // downstream consumer (FzTitle would show NaN counters, etc).
+    isReasonableDob(v.dob) &&
     hasValidWeeks(v.weeks) &&
     (v.vow === null || typeof v.vow === 'object') &&
     Array.isArray(v.letters) &&
@@ -115,6 +122,10 @@ function hasValidWeeks(weeks: unknown): weeks is Record<number, { mark: string; 
     if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) return false
     const e = entry as Record<string, unknown>
     if (typeof e.mark !== 'string' || e.mark === '') return false
+    // Enforce the single-grapheme contract at the storage boundary so
+    // a crafted backup with `mark: "ab"` can't slip past and render
+    // two glyphs in a 30px hexagon cell.
+    if (!isSingleGrapheme(e.mark)) return false
     if (typeof e.markedAt !== 'string') return false
     // Lightweight ISO-ish parse check — usePalette feeds markedAt into
     // new Date(...).getTime() and would produce NaN scores otherwise.
