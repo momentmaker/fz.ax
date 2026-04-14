@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useFzState } from '../composables/useFzState'
 import { useLibraryQuote } from '../composables/useQuotes'
+import { useToday } from '../composables/useToday'
 
 const { state } = useFzState()
-const today = ref(new Date())
+const { today } = useToday()
 const quote = useLibraryQuote(state, today)
 </script>
 
