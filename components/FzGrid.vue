@@ -59,12 +59,21 @@ function whisperFor(index: number): string | undefined {
 const litSet = computed(() => highlight.lit.value)
 const isHighlightActive = computed(() => highlight.isActive.value)
 
+// O(1) anchor lookup. The raw state.anchors is an array, so
+// `.includes` would be O(n) per hexagon — calling that 4000 times on
+// every reactive change becomes 4000n which is real cost for users
+// with many anchors. Wrapping it in a Set converts each lookup to
+// O(1). The Set is rebuilt only when state.value.anchors changes.
+const anchorSet = computed<ReadonlySet<number>>(() => {
+  return new Set(state.value?.anchors ?? [])
+})
+
 function isLit(index: number): boolean {
   return litSet.value.has(index)
 }
 
 function isAnchored(index: number): boolean {
-  return state.value?.anchors.includes(index) ?? false
+  return anchorSet.value.has(index)
 }
 
 function onAnchorToggle(index: number): void {

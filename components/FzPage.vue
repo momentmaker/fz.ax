@@ -163,6 +163,15 @@ function onBodyClick(event: MouseEvent): void {
   highlight.clear()
 }
 
+// Extracted from the inline arrow so we can pass the same reference
+// to keyboard.off() in onBeforeUnmount. Prevents handler accumulation
+// across HMR / component remounts (the useKeyboard singleton survives
+// across Vue component lifecycles).
+function onSlashKey(event: KeyboardEvent): void {
+  event.preventDefault()
+  openSearch()
+}
+
 const ASCII_HEXAGON = `
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣴⣾⣿⣿⣿⣶⣤⡀⠀⠀⠀⠀⣀⣤⣶⣿⣿⣿⣷⣤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -209,10 +218,7 @@ onMounted(() => {
   keyboard.init()
   keyboard.on('v', openVowModal)
   keyboard.on('q', toggleQuietMode)
-  keyboard.on('/', (event) => {
-    event.preventDefault()
-    openSearch()
-  })
+  keyboard.on('/', onSlashKey)
   keyboard.on('escape', onEscape)
 
   // Stage 5 F2.2: monday ceremony — after-the-fact notice
@@ -235,6 +241,14 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   if (mondayTimer !== null) clearTimeout(mondayTimer)
+  // Detach keyboard handlers so they don't accumulate across HMR or
+  // component remounts. The useKeyboard singleton outlives Vue
+  // component lifecycles, so a stale handler from a previous mount
+  // would otherwise keep firing on a closed-over old `searchOpen` ref.
+  keyboard.off('v', openVowModal)
+  keyboard.off('q', toggleQuietMode)
+  keyboard.off('/', onSlashKey)
+  keyboard.off('escape', onEscape)
   if (typeof document !== 'undefined') {
     document.removeEventListener('visibilitychange', onVisibilityChange)
     document.removeEventListener('click', onBodyClick)
