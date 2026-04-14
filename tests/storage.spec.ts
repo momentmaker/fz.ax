@@ -88,6 +88,63 @@ describe('storage', () => {
     expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
   })
 
+  it('rejects a blob where weeks has a non-object entry', () => {
+    // #given a v1 blob where weeks[100] is a number instead of an object
+    const bad = { ...sampleState, weeks: { 100: 42 } }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    // #then readState rejects it
+    expect(readState()).toBeNull()
+  })
+
+  it('rejects a blob where a WeekEntry is missing mark', () => {
+    // #given a week entry without a mark field
+    const bad = {
+      ...sampleState,
+      weeks: { 100: { markedAt: '2025-01-01T00:00:00.000Z' } },
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    // #then readState rejects it
+    expect(readState()).toBeNull()
+  })
+
+  it('rejects a blob where WeekEntry.mark is an empty string', () => {
+    // #given a week entry with an empty-string mark
+    const bad = {
+      ...sampleState,
+      weeks: { 100: { mark: '', markedAt: '2025-01-01T00:00:00.000Z' } },
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    // #then readState rejects it
+    expect(readState()).toBeNull()
+  })
+
+  it('rejects a blob where weeks has a non-integer key', () => {
+    // #given a week key that isn't a parseable non-negative integer
+    const bad = {
+      ...sampleState,
+      weeks: { 'hundred': { mark: '❤', markedAt: '2025-01-01T00:00:00.000Z' } },
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    // #then readState rejects it
+    expect(readState()).toBeNull()
+  })
+
+  it('accepts a blob with multiple valid week entries', () => {
+    // #given a state with several correctly-shaped weeks
+    const ok = {
+      ...sampleState,
+      weeks: {
+        100: { mark: '❤', markedAt: '2025-01-01T00:00:00.000Z' },
+        200: { mark: '☀', whisper: 'good day', markedAt: '2025-02-01T00:00:00.000Z' },
+        300: { mark: 'w', markedAt: '2025-03-01T00:00:00.000Z' },
+      },
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ok))
+    // #then readState accepts and returns the whole thing
+    const result = readState()
+    expect(result).toEqual(ok)
+  })
+
   it('writeState returns true on success', () => {
     // #given nothing in particular
     // #then writing succeeds

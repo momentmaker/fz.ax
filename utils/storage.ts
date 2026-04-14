@@ -71,12 +71,12 @@ export function readState(): FzState | null {
 
 /**
  * Narrow validation — confirms the parsed blob has the minimum shape required
- * to be treated as an FzState. Does NOT deep-check nested fields; that would
- * grow the storage layer into a schema validator. We only verify the fields
- * that downstream code would crash on if missing.
+ * to be treated as an FzState. Validates top-level fields and deep-checks
+ * every WeekEntry, because Stage 2+ code reads `state.weeks[i].mark` and
+ * would crash on a missing field.
  *
- * When Stage 2+ accesses nested fields (e.g. state.weeks[i].mark), either
- * tighten this validator or validate at the access site.
+ * When Stage 2+ accesses nested fields beyond WeekEntry, extend the helper
+ * below (not the top-level checker) so each sub-shape has its own validator.
  */
 function isValidFzState(value: unknown): value is FzState {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
@@ -86,13 +86,34 @@ function isValidFzState(value: unknown): value is FzState {
   return (
     v.version === 1 &&
     typeof v.dob === 'string' &&
-    typeof v.weeks === 'object' && v.weeks !== null && !Array.isArray(v.weeks) &&
+    hasValidWeeks(v.weeks) &&
     (v.vow === null || typeof v.vow === 'object') &&
     Array.isArray(v.letters) &&
     Array.isArray(v.anchors) &&
     typeof v.prefs === 'object' && v.prefs !== null &&
     typeof v.meta === 'object' && v.meta !== null
   )
+}
+
+/**
+ * Validate the sparse weeks map: every key must be a non-negative integer
+ * (serialized as a string in JSON), and every value must be a well-formed
+ * WeekEntry with a non-empty mark and a markedAt timestamp. An optional
+ * whisper is allowed; any other field is allowed too (forward compatibility).
+ */
+function hasValidWeeks(weeks: unknown): weeks is Record<number, { mark: string; whisper?: string; markedAt: string }> {
+  if (weeks === null || typeof weeks !== 'object' || Array.isArray(weeks)) {
+    return false
+  }
+  for (const [key, entry] of Object.entries(weeks as Record<string, unknown>)) {
+    if (!/^\d+$/.test(key)) return false
+    if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) return false
+    const e = entry as Record<string, unknown>
+    if (typeof e.mark !== 'string' || e.mark === '') return false
+    if (typeof e.markedAt !== 'string') return false
+    if (e.whisper !== undefined && typeof e.whisper !== 'string') return false
+  }
+  return true
 }
 
 /**
