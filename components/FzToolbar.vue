@@ -129,8 +129,8 @@ function onFileChange(event: Event): void {
   align-items: center;
   justify-content: center;
   background: white;
-  color: #F7B808;
-  border: 1.5px solid #0847F7;
+  color: var(--fz-yellow);
+  border: 1.5px solid var(--fz-blue);
   font-size: 1.1rem;
   font-weight: 800;
   cursor: pointer;
@@ -140,7 +140,7 @@ function onFileChange(event: Event): void {
 
 .tool:hover:not(:disabled),
 .tool:focus-visible:not(:disabled) {
-  background: #fffbe6;
+  background: var(--fz-yellow-soft);
   outline: none;
 }
 
@@ -150,9 +150,9 @@ function onFileChange(event: Event): void {
 }
 
 .tool-failed {
-  color: #ff3b30;
-  border-color: #ff3b30;
-  background: #fff0ef;
+  color: var(--fz-red);
+  border-color: var(--fz-red);
+  background: var(--fz-red-soft);
 }
 
 .toolbar-file {

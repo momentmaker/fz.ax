@@ -22,12 +22,12 @@ const year = computed(() => today.value.getFullYear())
   text-align: center;
   font-size: 0.7rem;
   font-style: italic;
-  color: #888;
+  color: var(--fz-text-quiet);
   letter-spacing: 0.05em;
 }
 
 .long-now-zero {
-  color: #F7B808;
+  color: var(--fz-yellow);
   font-weight: 700;
 }
 </style>

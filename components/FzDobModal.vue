@@ -66,7 +66,7 @@ function onBackdropClick(): void {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.75);
+  background: var(--fz-shadow-overlay);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -83,7 +83,7 @@ function onBackdropClick(): void {
 
 .modal-header {
   font-size: 2.1rem;
-  color: #F7B808;
+  color: var(--fz-yellow);
 }
 
 .modal-subtitle {
@@ -108,7 +108,7 @@ input[type="date"] {
 .btn-76 {
   -webkit-tap-highlight-color: transparent;
   -webkit-appearance: button;
-  background-color: #F7B808;
+  background-color: var(--fz-yellow);
   background-image: none;
   color: #fff;
   cursor: pointer;
@@ -120,7 +120,7 @@ input[type="date"] {
   margin: 0;
   -webkit-mask-image: -webkit-radial-gradient(#000, #fff);
   padding: 0;
-  --neon: #0847F7;
+  --neon: var(--fz-blue);
   box-sizing: border-box;
   font-weight: 900;
   -webkit-mask-image: none;

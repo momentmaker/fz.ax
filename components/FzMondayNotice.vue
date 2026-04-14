@@ -60,8 +60,8 @@ onBeforeUnmount(() => {
   max-width: 360px;
   margin: 0.75rem auto 0;
   padding: 0.5rem 1rem;
-  background: #fffbe6;
-  border-left: 3px solid #F7B808;
+  background: var(--fz-yellow-soft);
+  border-left: 3px solid var(--fz-yellow);
   cursor: pointer;
   text-align: center;
   font-size: 0.85rem;

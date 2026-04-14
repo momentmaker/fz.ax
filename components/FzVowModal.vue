@@ -95,7 +95,7 @@ function onBackdropClick(): void {
 .vow-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--fz-shadow-overlay-soft);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -105,7 +105,7 @@ function onBackdropClick(): void {
 
 .vow-content {
   background: white;
-  border: 1.5px solid #0847F7;
+  border: 1.5px solid var(--fz-blue);
   padding: 1.5rem 1.75rem;
   max-width: 380px;
   width: 100%;
@@ -114,7 +114,7 @@ function onBackdropClick(): void {
 
 .vow-prompt {
   margin: 0 0 0.75rem;
-  color: #0847F7;
+  color: var(--fz-blue);
   font-size: 0.85rem;
   font-style: italic;
 }
@@ -122,9 +122,9 @@ function onBackdropClick(): void {
 .vow-input {
   width: 100%;
   border: none;
-  border-bottom: 1px solid #0847F7;
+  border-bottom: 1px solid var(--fz-blue);
   background: transparent;
-  color: #0847F7;
+  color: var(--fz-blue);
   font-size: 1rem;
   font-style: italic;
   padding: 0.4rem 0;
@@ -132,13 +132,13 @@ function onBackdropClick(): void {
 }
 
 .vow-input::placeholder {
-  color: #ccc;
+  color: var(--fz-text-faint);
   font-style: italic;
 }
 
 .vow-error {
   margin: 0.5rem 0 0;
-  color: #ff3b30;
+  color: var(--fz-red);
   font-size: 0.75rem;
 }
 
@@ -151,8 +151,8 @@ function onBackdropClick(): void {
 
 .vow-btn {
   background: white;
-  border: 1.5px solid #0847F7;
-  color: #F7B808;
+  border: 1.5px solid var(--fz-blue);
+  color: var(--fz-yellow);
   font-weight: 800;
   cursor: pointer;
   padding: 0.4rem 0.8rem;
@@ -166,12 +166,12 @@ function onBackdropClick(): void {
 
 .vow-btn:hover:not(:disabled),
 .vow-btn:focus-visible:not(:disabled) {
-  background: #fffbe6;
+  background: var(--fz-yellow-soft);
   outline: none;
 }
 
 .vow-clear {
-  color: #ff3b30;
-  border-color: #ff3b30;
+  color: var(--fz-red);
+  border-color: var(--fz-red);
 }
 </style>

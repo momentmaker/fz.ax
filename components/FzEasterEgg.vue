@@ -38,13 +38,13 @@ const { active, quote } = useEasterEgg()
 }
 
 .egg-deco {
-  color: #0847F7;
+  color: var(--fz-blue);
   font-size: 1.5rem;
   letter-spacing: 0.5em;
 }
 
 .egg-quote {
-  color: #F7B808;
+  color: var(--fz-yellow);
   font-size: 1.6rem;
   font-style: italic;
   font-weight: 700;

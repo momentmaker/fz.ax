@@ -82,16 +82,16 @@ onBeforeUnmount(() => {
   max-width: 560px;
   margin: 0.75rem auto 0;
   padding: 0.75rem 1rem;
-  background: #fffbe6;
-  border-left: 3px solid #ff3b30;
+  background: var(--fz-yellow-soft);
+  border-left: 3px solid var(--fz-red);
   cursor: pointer;
   text-align: left;
   font-size: 0.85rem;
-  color: #444;
+  color: var(--fz-text);
 }
 
 .echo-label {
-  color: #ff3b30;
+  color: var(--fz-red);
   font-size: 0.6rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -100,12 +100,12 @@ onBeforeUnmount(() => {
 }
 
 .echo-whisper {
-  color: #333;
+  color: var(--fz-text);
   font-style: italic;
 }
 
 .echo-meta {
-  color: #888;
+  color: var(--fz-text-quiet);
   font-size: 0.75rem;
 }
 

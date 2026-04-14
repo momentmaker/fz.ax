@@ -81,9 +81,9 @@ onBeforeUnmount(() => {
 
 .search-input {
   width: 100%;
-  border: 1px solid #0847F7;
+  border: 1px solid var(--fz-blue);
   background: white;
-  color: #0847F7;
+  color: var(--fz-blue);
   font-size: 0.9rem;
   font-style: italic;
   padding: 0.4rem 0.6rem;
@@ -91,12 +91,12 @@ onBeforeUnmount(() => {
 }
 
 .search-input::placeholder {
-  color: #ccc;
+  color: var(--fz-text-faint);
   font-style: italic;
 }
 
 .search-count {
   font-size: 0.7rem;
-  color: #888;
+  color: var(--fz-text-quiet);
 }
 </style>

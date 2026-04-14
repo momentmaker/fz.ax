@@ -26,8 +26,8 @@ function onClick(): void {
   align-items: center;
   justify-content: center;
   background: white;
-  color: #F7B808;
-  border: 1.5px solid #0847F7;
+  color: var(--fz-yellow);
+  border: 1.5px solid var(--fz-blue);
   font-size: 1.1rem;
   font-weight: 800;
   cursor: pointer;
@@ -37,7 +37,7 @@ function onClick(): void {
 
 .tool:hover,
 .tool:focus-visible {
-  background: #fffbe6;
+  background: var(--fz-yellow-soft);
   outline: none;
 }
 </style>

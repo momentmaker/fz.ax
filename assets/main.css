@@ -1,14 +1,50 @@
+:root {
+  --fz-yellow: #F7B808;
+  --fz-yellow-soft: #fffbe6;
+  --fz-yellow-hover: #d99f00;
+  --fz-blue: #0847F7;
+  --fz-bg: #FFFFFF;
+  --fz-bg-texture: url("~/assets/cubes.png");
+  --fz-text: #333333;
+  --fz-text-quiet: #888888;
+  --fz-text-faint: #cccccc;
+  --fz-border: #cccccc;
+  --fz-red: #ff3b30;
+  --fz-red-soft: #fff0ef;
+  --fz-shadow-overlay: rgba(0, 0, 0, 0.75);
+  --fz-shadow-overlay-soft: rgba(0, 0, 0, 0.55);
+}
+
+html[data-theme="dark"] {
+  --fz-yellow: #F7B808;
+  --fz-yellow-soft: #2a2410;
+  --fz-yellow-hover: #d99f00;
+  --fz-blue: #4A8EFF;
+  --fz-bg: #0F0F0F;
+  --fz-bg-texture: none;
+  --fz-text: #e8e8e8;
+  --fz-text-quiet: #888888;
+  --fz-text-faint: #444444;
+  --fz-border: #2a2a2a;
+  --fz-red: #FF453A;
+  --fz-red-soft: #2a1010;
+  --fz-shadow-overlay: rgba(0, 0, 0, 0.85);
+  --fz-shadow-overlay-soft: rgba(0, 0, 0, 0.65);
+}
+
 body {
-  background-color: #FFF;
-  background-image: url("~/assets/cubes.png");
+  background-color: var(--fz-bg);
+  background-image: var(--fz-bg-texture);
   font-family: 'Roboto', sans-serif;
+  color: var(--fz-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .hexagon-scroll {
   position: fixed;
   width: 33px;
   height: 19.05px;
-  background-color: #2f62df;
+  background-color: var(--fz-blue);
   margin: 9.53px 0;
   right: -35px;
   bottom: 11.5px;
@@ -27,13 +63,13 @@ body {
 
 .hexagon-scroll:before {
   bottom: 100%;
-  border-bottom: 9.53px solid #2f62df;
+  border-bottom: 9.53px solid var(--fz-blue);
 }
 
 .hexagon-scroll:after {
   top: 100%;
   width: 0;
-  border-top: 9.53px solid #2f62df;
+  border-top: 9.53px solid var(--fz-blue);
 }
 
 .icon {

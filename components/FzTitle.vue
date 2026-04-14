@@ -48,7 +48,7 @@ const vowText = computed<string | null>(() => state.value?.vow?.text ?? null)
 .title {
   font-size: 2.1rem;
   cursor: pointer;
-  color: #F7B808;
+  color: var(--fz-yellow);
   display: inline-block;
   transition: all 0.7s ease;
   margin-bottom: 0px;
@@ -59,7 +59,7 @@ const vowText = computed<string | null>(() => state.value?.vow?.text ?? null)
 }
 
 .subtitle {
-  color: #F7B808;
+  color: var(--fz-yellow);
   font-size: 1.2rem;
 }
 
@@ -67,7 +67,7 @@ const vowText = computed<string | null>(() => state.value?.vow?.text ?? null)
 .wagmi {
   font-size: 0.7rem;
   vertical-align: middle;
-  color: #0847F7;
+  color: var(--fz-blue);
 }
 
 .beherenow {
@@ -79,7 +79,7 @@ const vowText = computed<string | null>(() => state.value?.vow?.text ?? null)
   margin: 0.25rem 0 0.5rem;
   font-size: 0.65rem;
   font-weight: 300;
-  color: #0847F7;
+  color: var(--fz-blue);
   letter-spacing: 0.05em;
   max-width: 320px;
   margin-left: auto;
@@ -89,11 +89,11 @@ const vowText = computed<string | null>(() => state.value?.vow?.text ?? null)
 }
 
 .vow-line:hover em {
-  border-bottom: 1px solid #0847F7;
+  border-bottom: 1px solid var(--fz-blue);
 }
 
 .vow-empty {
-  color: #ccc;
+  color: var(--fz-text-faint);
 }
 
 @keyframes pulsate {

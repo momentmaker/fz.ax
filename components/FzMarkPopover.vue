@@ -227,7 +227,7 @@ function setFirstPaletteRef(el: unknown, i: number): void {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.75);
+  background: var(--fz-shadow-overlay);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -241,8 +241,8 @@ function setFirstPaletteRef(el: unknown, i: number): void {
   max-width: calc(100vw - 2rem);
   text-align: center;
   z-index: 1001;
-  box-shadow: 6px 6px 0 0 #F7B808;
-  border: 2px solid #0847F7;
+  box-shadow: 6px 6px 0 0 var(--fz-yellow);
+  border: 2px solid var(--fz-blue);
 }
 
 .pop-head {
@@ -250,12 +250,12 @@ function setFirstPaletteRef(el: unknown, i: number): void {
   align-items: center;
   justify-content: space-between;
   padding-bottom: 0.75rem;
-  border-bottom: 1px dashed #cccccc;
+  border-bottom: 1px dashed var(--fz-border);
 }
 
 .pop-label {
   font-size: 0.7rem;
-  color: #0847F7;
+  color: var(--fz-blue);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-weight: 800;
@@ -265,7 +265,7 @@ function setFirstPaletteRef(el: unknown, i: number): void {
   background: none;
   border: none;
   font-size: 1.25rem;
-  color: #0847F7;
+  color: var(--fz-blue);
   cursor: pointer;
   padding: 0 0.25rem;
   line-height: 1;
@@ -273,7 +273,7 @@ function setFirstPaletteRef(el: unknown, i: number): void {
 
 .pop-section {
   padding: 0.9rem 0;
-  border-bottom: 1px dashed #cccccc;
+  border-bottom: 1px dashed var(--fz-border);
 }
 
 .pop-section:last-of-type {
@@ -282,7 +282,7 @@ function setFirstPaletteRef(el: unknown, i: number): void {
 
 .pop-section-label {
   font-size: 0.6rem;
-  color: #888888;
+  color: var(--fz-text-quiet);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   margin-bottom: 0.5rem;
@@ -299,8 +299,8 @@ function setFirstPaletteRef(el: unknown, i: number): void {
   width: 36px;
   height: 36px;
   background: white;
-  color: #F7B808;
-  border: 1.5px solid #0847F7;
+  color: var(--fz-yellow);
+  border: 1.5px solid var(--fz-blue);
   font-size: 1.1rem;
   font-weight: 800;
   cursor: pointer;
@@ -313,7 +313,7 @@ function setFirstPaletteRef(el: unknown, i: number): void {
 
 .pop-glyph:hover,
 .pop-glyph:focus-visible {
-  background: #fffbe6;
+  background: var(--fz-yellow-soft);
   outline: none;
 }
 
@@ -323,8 +323,8 @@ function setFirstPaletteRef(el: unknown, i: number): void {
   text-align: center;
   font-size: 1.4rem;
   font-weight: 900;
-  color: #F7B808;
-  border: 1.5px solid #0847F7;
+  color: var(--fz-yellow);
+  border: 1.5px solid var(--fz-blue);
   background: white;
   padding: 0;
   margin: 0 auto;
@@ -332,8 +332,8 @@ function setFirstPaletteRef(el: unknown, i: number): void {
 }
 
 .pop-one-char:focus-visible {
-  background: #fffbe6;
-  outline: 2px solid #F7B808;
+  background: var(--fz-yellow-soft);
+  outline: 2px solid var(--fz-yellow);
   outline-offset: 2px;
 }
 
@@ -344,34 +344,34 @@ function setFirstPaletteRef(el: unknown, i: number): void {
   padding: 0.5rem;
   font-size: 0.85rem;
   font-family: 'Roboto', sans-serif;
-  color: #333;
-  border: 1.5px solid #0847F7;
+  color: var(--fz-text);
+  border: 1.5px solid var(--fz-blue);
   background: white;
   font-style: italic;
 }
 
 .pop-whisper:focus-visible {
-  background: #fffbe6;
+  background: var(--fz-yellow-soft);
   outline: none;
 }
 
 .pop-whisper-locked {
   background: #f5f5f5;
   color: #aaa;
-  border-color: #cccccc;
+  border-color: var(--fz-border);
   cursor: not-allowed;
   font-style: normal;
 }
 
 .pop-counter {
   font-size: 0.6rem;
-  color: #888888;
+  color: var(--fz-text-quiet);
   text-align: right;
   margin-top: 0.25rem;
 }
 
 .pop-counter-warn {
-  color: #ff3b30;
+  color: var(--fz-red);
 }
 
 .pop-foot {
@@ -379,13 +379,13 @@ function setFirstPaletteRef(el: unknown, i: number): void {
   align-items: center;
   justify-content: space-between;
   padding-top: 0.9rem;
-  border-top: 1px dashed #cccccc;
+  border-top: 1px dashed var(--fz-border);
 }
 
 .pop-clear {
   background: none;
   border: none;
-  color: #ff3b30;
+  color: var(--fz-red);
   font-size: 0.75rem;
   cursor: pointer;
   text-transform: uppercase;
@@ -395,8 +395,8 @@ function setFirstPaletteRef(el: unknown, i: number): void {
 
 .pop-constellation {
   background: white;
-  border: 1.5px solid #0847F7;
-  color: #F7B808;
+  border: 1.5px solid var(--fz-blue);
+  color: var(--fz-yellow);
   font-weight: 800;
   cursor: pointer;
   padding: 0.3rem 0.55rem;
@@ -405,13 +405,13 @@ function setFirstPaletteRef(el: unknown, i: number): void {
 
 .pop-constellation:hover,
 .pop-constellation:focus-visible {
-  background: #fffbe6;
+  background: var(--fz-yellow-soft);
   outline: none;
 }
 
 .btn-76 {
   -webkit-tap-highlight-color: transparent;
-  background-color: #F7B808;
+  background-color: var(--fz-yellow);
   color: #fff;
   cursor: pointer;
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
@@ -426,7 +426,7 @@ function setFirstPaletteRef(el: unknown, i: number): void {
   position: relative;
   text-transform: uppercase;
   transition: 0.2s linear 0.1s;
-  --neon: #0847F7;
+  --neon: var(--fz-blue);
 }
 
 .btn-76:hover,

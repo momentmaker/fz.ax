@@ -125,7 +125,7 @@ function onTouchEnd(_event: TouchEvent): void {
   align-items: center;
   cursor: pointer;
   position: relative;
-  color: #0847F7;
+  color: var(--fz-blue);
   /*
    * Suppress iOS Safari's native long-press callout ("Copy / Look Up
    * / Share") on hexagons. Without this, a long-press on iPhone shows
@@ -144,24 +144,24 @@ function onTouchEnd(_event: TouchEvent): void {
 }
 
 .hexagon.marked {
-  color: #F7B808;
+  color: var(--fz-yellow);
   font-weight: 700;
 }
 
 .hexagon.current-week {
-  color: #F7B808;
+  color: var(--fz-yellow);
   animation: current-glow 2.4s ease-in-out infinite;
 }
 
 @keyframes current-glow {
   0%, 100% { text-shadow: 0 0 0 transparent; }
-  50% { text-shadow: 0 0 6px #F7B808; }
+  50% { text-shadow: 0 0 6px var(--fz-yellow); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .hexagon.current-week {
     animation: none;
-    text-shadow: 0 0 4px #F7B808;
+    text-shadow: 0 0 4px var(--fz-yellow);
   }
 }
 
@@ -170,7 +170,7 @@ function onTouchEnd(_event: TouchEvent): void {
   bottom: -20px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.75);
+  background: var(--fz-shadow-overlay);
   color: white;
   padding: 5px 8px;
   border-radius: 5px;
@@ -201,7 +201,7 @@ function onTouchEnd(_event: TouchEvent): void {
 }
 
 .hexagon.lit {
-  outline: 1.5px solid #F7B808;
+  outline: 1.5px solid var(--fz-yellow);
   transform: scale(1.05);
   transition: transform 0.4s ease-in-out, outline 0.4s ease-in-out;
 }
@@ -212,17 +212,17 @@ function onTouchEnd(_event: TouchEvent): void {
 }
 
 .hexagon.anchored {
-  outline: 3px solid #ff3b30;
+  outline: 3px solid var(--fz-red);
   outline-offset: 1px;
 }
 
 .hexagon.anchored.lit {
-  outline: 3px solid #ff3b30;
-  box-shadow: 0 0 0 1.5px #F7B808;
+  outline: 3px solid var(--fz-red);
+  box-shadow: 0 0 0 1.5px var(--fz-yellow);
 }
 
 .hexagon.anchored:hover {
-  box-shadow: 0 0 6px #ff3b30;
+  box-shadow: 0 0 6px var(--fz-red);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -177,7 +177,7 @@ function onKey(event: KeyboardEvent): void {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.75);
+  background: var(--fz-shadow-overlay);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -191,17 +191,17 @@ function onKey(event: KeyboardEvent): void {
   max-width: calc(100vw - 2rem);
   text-align: center;
   z-index: 1001;
-  box-shadow: 6px 6px 0 0 #F7B808;
-  border: 2px solid #0847F7;
+  box-shadow: 6px 6px 0 0 var(--fz-yellow);
+  border: 2px solid var(--fz-blue);
 }
 
 .sunday-head {
   padding-bottom: 1rem;
-  border-bottom: 1px dashed #cccccc;
+  border-bottom: 1px dashed var(--fz-border);
 }
 
 .sunday-label {
-  color: #0847F7;
+  color: var(--fz-blue);
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.18em;
@@ -209,13 +209,13 @@ function onKey(event: KeyboardEvent): void {
 }
 
 .sunday-range {
-  color: #888;
+  color: var(--fz-text-quiet);
   font-size: 0.7rem;
   margin-top: 0.25rem;
 }
 
 .sunday-prompt {
-  color: #444;
+  color: var(--fz-text);
   font-style: italic;
   margin: 1rem 0;
   font-size: 0.95rem;
@@ -227,7 +227,7 @@ function onKey(event: KeyboardEvent): void {
 
 .sunday-section-label {
   font-size: 0.6rem;
-  color: #888;
+  color: var(--fz-text-quiet);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   margin-bottom: 0.4rem;
@@ -239,8 +239,8 @@ function onKey(event: KeyboardEvent): void {
   text-align: center;
   font-size: 1.4rem;
   font-weight: 900;
-  color: #F7B808;
-  border: 1.5px solid #0847F7;
+  color: var(--fz-yellow);
+  border: 1.5px solid var(--fz-blue);
   background: white;
   padding: 0;
   margin: 0 auto;
@@ -248,8 +248,8 @@ function onKey(event: KeyboardEvent): void {
 }
 
 .sunday-one-char:focus-visible {
-  background: #fffbe6;
-  outline: 2px solid #F7B808;
+  background: var(--fz-yellow-soft);
+  outline: 2px solid var(--fz-yellow);
   outline-offset: 2px;
 }
 
@@ -259,22 +259,22 @@ function onKey(event: KeyboardEvent): void {
   padding: 0.5rem;
   font-size: 0.85rem;
   font-family: 'Roboto', sans-serif;
-  color: #333;
-  border: 1.5px solid #0847F7;
+  color: var(--fz-text);
+  border: 1.5px solid var(--fz-blue);
   background: white;
   font-style: italic;
   resize: vertical;
 }
 
 .sunday-whisper:focus-visible {
-  background: #fffbe6;
+  background: var(--fz-yellow-soft);
   outline: none;
 }
 
 .sunday-whisper-locked {
   background: #f5f5f5;
   color: #aaa;
-  border-color: #cccccc;
+  border-color: var(--fz-border);
   cursor: not-allowed;
   font-style: normal;
 }
@@ -282,14 +282,14 @@ function onKey(event: KeyboardEvent): void {
 .sunday-foot {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px dashed #cccccc;
+  border-top: 1px dashed var(--fz-border);
   display: flex;
   justify-content: center;
 }
 
 .btn-76 {
   -webkit-tap-highlight-color: transparent;
-  background-color: #F7B808;
+  background-color: var(--fz-yellow);
   color: #fff;
   cursor: pointer;
   font-family: ui-sans-serif, system-ui, sans-serif;
@@ -303,7 +303,7 @@ function onKey(event: KeyboardEvent): void {
   position: relative;
   text-transform: uppercase;
   transition: 0.2s linear 0.1s;
-  --neon: #0847F7;
+  --neon: var(--fz-blue);
 }
 
 .btn-76:hover,

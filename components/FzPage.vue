@@ -341,7 +341,7 @@ watch(solsticeKind, (next, prev) => {
   text-align: center;
   font-variant: small-caps;
   letter-spacing: 0.3em;
-  color: #F7B808;
+  color: var(--fz-yellow);
   font-size: 0.7rem;
   margin-bottom: 0.5rem;
 }
