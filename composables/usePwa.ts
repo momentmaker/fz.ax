@@ -70,7 +70,17 @@ export function usePwa(): UsePwaReturn {
 
   const canInstall = ref(false)
   const isInstalled = ref(computeInitialInstalled())
-  const pushEnabled = ref(false)
+  // Seed pushEnabled from persisted prefs at creation time so the
+  // toolbar button doesn't flicker from "off" to "on" between FzPage
+  // mount and register() completing. register() is the source of truth
+  // for scheduling, but the visual state reflects the saved preference
+  // immediately when both permission and opt-in say it should be on.
+  const { state: _seedState } = useFzState()
+  const pushEnabled = ref(
+    supportsPush
+    && _seedState.value?.prefs.pushOptIn === true
+    && Notification.permission === 'granted',
+  )
   const pushPermission = ref<NotificationPermission | 'unsupported'>(
     supportsPush ? Notification.permission : 'unsupported',
   )
