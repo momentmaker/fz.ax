@@ -63,4 +63,15 @@ describe('generatePoster', () => {
     // #then the year is in the footer somewhere
     expect(svg).toContain('2026')
   })
+
+  it('renders exactly 4003 positioned text elements (1 title + 4000 weeks + 2 footer)', () => {
+    // #given an empty state
+    const state = stateWith({})
+    // #when we generate
+    const svg = generatePoster(state, new Date('2026-04-14T00:00:00.000Z'))
+    // #then the count of positioned <text x=... elements is stable
+    // — regression guard against future layout changes dropping cells
+    const count = (svg.match(/<text x="/g) ?? []).length
+    expect(count).toBe(4003)
+  })
 })

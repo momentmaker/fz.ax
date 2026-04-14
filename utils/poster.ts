@@ -9,7 +9,11 @@ import { localDateString } from './date'
  *
  * Layout:
  *   - Title at the top (yellow, centered)
- *   - 40-column × 100-row grid of hex glyphs below the title
+ *   - 58-column × 69-row grid of square hex glyphs below the title
+ *     (4002 slots total, of which the first 4000 carry the user's weeks
+ *     and the last 2 remain blank — picked to keep cells square at A2
+ *     proportions rather than using an exact divisor of 4000 like 40×100
+ *     which produced a strongly horizontal-heavy grid)
  *   - Footer with the long-now year and the export date
  *
  * Marks are rendered as yellow <text> elements in place of the default
