@@ -16,8 +16,14 @@ import { localDateString } from './date'
  * past/current/future glyphs. The current week gets a stronger color.
  */
 export function generatePoster(state: FzState, today: Date = new Date()): string {
-  const COLS = 40
-  const ROWS = 100 // 40 × 100 = 4000
+  // Grid layout picked so cells are nearly square at A2 proportions.
+  // 58 × 69 = 4002 slots, of which the first 4000 carry weeks and the
+  // last 2 remain empty. The alternative exact factors of 4000 (40×100
+  // and 50×80) both produce strongly non-square cells — 40×100 made a
+  // 2:1 horizontal-heavy grid, 50×80 was 1.3:1. The ~6.72mm square
+  // here lands a clean checkerboard that fills the A2 width edge-to-edge.
+  const COLS = 58
+  const ROWS = 69
   const MARGIN = 15 // mm
   const WIDTH = 420 // mm (A2 width)
   const HEIGHT = 594 // mm (A2 height)
@@ -30,12 +36,13 @@ export function generatePoster(state: FzState, today: Date = new Date()): string
   const GRID_WIDTH = WIDTH - MARGIN * 2
   const GRID_HEIGHT = GRID_BOTTOM - GRID_TOP
 
-  const CELL_W = GRID_WIDTH / COLS
-  const CELL_H = GRID_HEIGHT / ROWS
-  const CELL_SIZE = Math.min(CELL_W, CELL_H)
+  // Force square cells — take the smaller of the two naive cell sizes
+  // so both width and height dimensions get the same value.
+  const CELL_SIZE = Math.min(GRID_WIDTH / COLS, GRID_HEIGHT / ROWS)
 
-  const GRID_X_START = MARGIN + (GRID_WIDTH - CELL_W * COLS) / 2
-  const GRID_Y_START = GRID_TOP + (GRID_HEIGHT - CELL_H * ROWS) / 2
+  // Center the square grid in the available area.
+  const GRID_X_START = MARGIN + (GRID_WIDTH - CELL_SIZE * COLS) / 2
+  const GRID_Y_START = GRID_TOP + (GRID_HEIGHT - CELL_SIZE * ROWS) / 2
 
   const dob = new Date(state.dob)
   // Use currentGridIndex so a user past week 3999 still gets a ⏣ on the
@@ -59,8 +66,8 @@ export function generatePoster(state: FzState, today: Date = new Date()): string
   for (let i = 0; i < totalWeeks; i++) {
     const col = i % COLS
     const row = Math.floor(i / COLS)
-    const cx = GRID_X_START + col * CELL_W + CELL_W / 2
-    const cy = GRID_Y_START + row * CELL_H + CELL_H / 2
+    const cx = GRID_X_START + col * CELL_SIZE + CELL_SIZE / 2
+    const cy = GRID_Y_START + row * CELL_SIZE + CELL_SIZE / 2
 
     const entry = state.weeks[i]
     let glyph: string
