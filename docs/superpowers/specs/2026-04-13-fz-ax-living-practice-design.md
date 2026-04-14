@@ -41,9 +41,9 @@ Features are grouped by tier. **All tiers are in scope for this redesign.** The 
 | ID | Feature | Description |
 |---|---|---|
 | F0.1 | The Mark | Each week can hold exactly one character (any Unicode codepoint). Click a hexagon → popover opens → choose from your personal palette or type a new character. Saved to `localStorage` immediately. |
-| F0.2 | The Personal Palette | Your most-used Marks appear in the popover as a one-tap palette. The palette is derived from usage frequency and grows automatically. You only ever type a character the first time you use it. |
-| F0.3 | The Whisper | Each marked week can also hold exactly one sentence. Edited in the same popover as the Mark. Visible only on hover (desktop) or long-press (touch). |
-| F0.4 | Hexagon glyph rules | `⬢` past, `⏣` current, `⬡` future. Marked weeks display the Mark glyph instead of the past/future glyph, in yellow. The current week always uses `⏣` regardless of whether it is marked. |
+| F0.2 | The Personal Palette | Your 8 most-used Marks appear in the popover as a one-tap palette, ordered by recency-weighted frequency. The palette is derived from usage and grows automatically. You only ever type a character the first time you use it. |
+| F0.3 | The Whisper | Each marked week can also hold exactly one sentence. Edited in the same popover as the Mark. On desktop, visible as a hover tooltip. On touch, visible inside the popover when the hexagon is tapped (no long-press required). |
+| F0.4 | Hexagon glyph rules | Unmarked weeks: `⬢` past, `⏣` current, `⬡` future. **Marked weeks always display the Mark glyph, in yellow, regardless of past/current/future state.** "Current" is conveyed by a soft glow animation, not by symbol substitution — so a marked current week shows its Mark with a glow, not `⏣`. |
 
 ### Tier 1 — Rituals & living layer (v1 expansion)
 
@@ -55,19 +55,19 @@ Features are grouped by tier. **All tiers are in scope for this redesign.** The 
 | F1.4 | Poster export (SVG) | Generate a printable SVG poster of the user's life-as-hexagons, with all Marks baked in. Client-side only. Triggered from the toolbar. Saved as `fz-ax-{date}.svg`. |
 | F1.5 | JSON backup / restore | Export the entire `localStorage` state as a single `.json` file. Re-import the same file on any device to restore. |
 | F1.6 | Installable PWA + offline | Complete the manifest story. Service worker pre-caches the app shell. Works fully offline. Installable on iOS / Android / desktop. |
-| F1.7 | Sunday Push notification | If installed as PWA, the service worker schedules a local notification for Sunday 21:00 local time: *"⏣ this week is closing — what do you want to remember about it?"* Opt-in. No backend involved. |
+| F1.7 | Sunday Push notification | **Best-effort, browser-permitting.** If installed as PWA on a browser that supports the Notification Triggers API (Chromium desktop), the service worker schedules a local notification for Sunday 21:00 local time: *"⏣ this week is closing — what do you want to remember about it?"* On other browsers, this feature is silently unavailable — the in-app Sunday Whisper ritual modal (F1.1) remains the primary trigger and works everywhere. Opt-in. No backend involved. |
 | F1.8 | Easter eggs preserved + extended | The existing ASCII hexagon comment stays in the page source. One new egg is added: a key sequence (`fz` typed in quick succession) reveals a hidden quote. |
-| F1.9 | Code refactor | Migrate from a single 430-line `app.vue` to TypeScript, composables, split components, and a small Vitest suite for the time math. |
+| F1.9 | Code refactor | Migrate from a single 430-line `app.vue` to TypeScript, composables, split components, and a small Vitest suite for the time math. **This is the same work as Stage 1 — Foundations** in the implementation order. F1.9 is the inventory ID; Stage 1 is the build phase. |
 
 ### Tier 2 — The calendar of rituals
 
 | ID | Feature | Description |
 |---|---|---|
-| F2.1 | The Vow | A single sentence shown in tiny script under the title. The user's intent for the year. Edited via a small "edit vow" affordance in the popover or via keyboard `V`. |
+| F2.1 | The Vow | A single sentence shown in tiny script under the title. The user's intent for the year. Edited via a dedicated tiny `FzVowModal` (a one-line input + save button) opened by clicking the vow itself or by pressing `V`. |
 | F2.2 | Monday Ceremony | At local Monday 00:00, the previous current `⏣` becomes `⬢` and the new current `⏣` is born — with a brief, dignified animation (~1.2s). If the user has the page open at that moment, they witness it. The first time they open the page after a Monday transition, a small one-line notice appears: *"a week passed."* |
 | F2.3 | Constellation Lines | When the user clicks (or focuses) a marked week, every other week with the *same Mark glyph* lights up across the entire grid. Press Escape or click empty space to dismiss. |
 | F2.4 | Anniversary Echo | On page load, if there are Marks/Whispers on the same calendar-week-of-year as the current week from previous years, surface them as anniversary banners: *"⌁ this week, {N} year(s) ago: '{whisper}'"*. Up to 3 lines. |
-| F2.5 | Solstice / Equinox treatment | On the four astronomical mile-marker days (vernal equinox, summer solstice, autumnal equinox, winter solstice), the page transforms briefly: dark background, a longer quote from a curated solstice library, a different border. Lasts 24 hours then reverts. |
+| F2.5 | Solstice / Equinox treatment | On the four astronomical mile-marker days (vernal equinox, summer solstice, autumnal equinox, winter solstice), the page transforms briefly: dark background, a longer quote from a curated solstice library, a different border. The treatment is active for the entire local calendar day on which the solstice/equinox falls (00:00 → 23:59 in the user's local timezone), then reverts. |
 | F2.6 | Quiet Mode | Pressing `Q` strips title, subtitle, library, toolbar — leaving just the hexagons edge to edge. Press `Q` again or Escape to return. |
 | F2.7 | Whisper Search | Pressing `/` opens a small search input. Typed text matches against all Whispers; matching weeks light up; non-matching weeks dim. Escape clears. |
 | F2.8 | The Long Now footer | A small line at the foot of the page: *"02026 · the long now"* — using the Long Now Foundation 5-digit year notation. The leading zero is shown in yellow as a quiet typographic accent. |
@@ -77,7 +77,7 @@ Features are grouped by tier. **All tiers are in scope for this redesign.** The 
 
 | ID | Feature | Description |
 |---|---|---|
-| F3.1 | First Run Ceremony | Replace the bare DOB modal with three slow, dignified screens (3-4 seconds each, advance on click): (1) *"the average human life is four-thousand weeks."* (2) *"this page is a quiet place to notice them."* (3) *"when did you arrive?"* — and only then, the date input. |
+| F3.1 | First Run Ceremony | Replace the bare DOB modal with three slow, dignified screens, **click-to-advance only** (no auto-advance — the user controls pacing): (1) *"the average human life is four-thousand weeks."* (2) *"this page is a quiet place to notice them."* (3) *"when did you arrive?"* — and only then, the date input. |
 | F3.2 | Birthday Hexagon | Each year, the week containing the user's birthday gets a thin gold halo (a circular border + glow). 77 birthday weeks across 4,000. They become the natural year-pulse markers across the grid. |
 | F3.3 | The Annual Letter | Once per year, on the week of the user's birthday, a quiet modal appears: *"write a paragraph to yourself, one year from now."* Sealed (not visible) until exactly 365 days later, when it auto-reveals on opening the page. The most personal feature in the app. |
 | F3.4 | Dark Mode | Designed (not inverted) dark variant. Yellow stays gold. Blue becomes electric (lighter shade). Background goes near-black. Auto-switches by `prefers-color-scheme`. Manual override stored in localStorage. |
@@ -144,9 +144,8 @@ interface Preferences {
 interface Meta {
   createdAt: string;          // first run timestamp
   lastSundayPrompt?: string;  // ISO date of last shown Sunday modal
-  lastMondayCeremony?: string; // ISO date of last witnessed week change
-  lastEcho?: { week: number; shownAt: string };
-  lastVisitedWeek?: number;   // for detecting "a week passed" since last open
+  lastEcho?: string;          // ISO date of last shown Echo (max one per day)
+  lastVisitedWeek?: number;   // last week index seen — drives the "a week passed" notice
   installedPwa?: boolean;
 }
 ```
@@ -189,15 +188,14 @@ Re-import validates the wrapper, validates the inner `FzState` against the schem
 
 ```
 fz.ax/
-├── app.vue                          # Becomes a thin shell that mounts <FzPage/>
-├── pages/                           # Single page only
-│   └── index.vue
+├── app.vue                          # Thin shell — mounts <FzPage/>. No pages/ directory; this is a single-page app.
 ├── components/
 │   ├── FzPage.vue                   # Top-level layout (title, sub, grid, footer)
 │   ├── FzTitle.vue                  # Title + subtitle + vow line
 │   ├── FzGrid.vue                   # The 4000-hexagon grid + scroll behavior
 │   ├── FzHexagon.vue                # A single hexagon (props: index, state, mark, anchor)
 │   ├── FzMarkPopover.vue            # The click → mark + whisper popover
+│   ├── FzVowModal.vue               # The vow editor (one-line input)
 │   ├── FzToolbar.vue                # Sunday button, poster, backup, theme toggle
 │   ├── FzLibrary.vue                # The rotating quote line below the grid
 │   ├── FzEcho.vue                   # The Echo banner (random past)
@@ -230,9 +228,9 @@ fz.ax/
 │   ├── quotes.ts                    # The Library quote corpus (curated)
 │   └── solstice-quotes.ts           # The astronomical-day quote corpus
 ├── public/
-│   ├── CNAME                        # "fz.ax"
-│   ├── manifest.webmanifest         # (existing, will be enhanced)
-│   ├── sw.js                        # Or generated by Nuxt PWA module
+│   ├── CNAME                        # "fz.ax" — for GitHub Pages custom domain
+│   ├── site.webmanifest             # existing — will be enhanced for installable PWA
+│   ├── sw.js                        # hand-written service worker (no Workbox)
 │   └── (existing favicons)
 ├── tests/
 │   ├── useTime.spec.ts
@@ -280,11 +278,10 @@ The current `server/` directory is removed. It only contains a `tsconfig.json` a
 
 ### Service worker
 
-A single hand-written `sw.js` (or a Nuxt PWA-module-generated equivalent). It does three things:
+A single hand-written `sw.js` (no Workbox, no third-party SW library). It does two things:
 
-1. **Cache the app shell** for offline use (HTML, CSS, JS, fonts, favicons).
-2. **Schedule a local notification** for Sunday 21:00 local time using the Notifications API + `setInterval`-equivalent Workbox `BackgroundSyncPlugin` or simply checking on each `activate`/`fetch`. Implementation note: true scheduled local notifications require the (still-experimental) `Notification Triggers API`. If unavailable, fall back to scheduling on every `visibilitychange` and using a stored "next prompt time" in IndexedDB.
-3. **Cache-first** for app assets, **network-first** for the document.
+1. **Cache the app shell** for offline use (HTML, CSS, JS, fonts, favicons). Cache-first for assets, network-first for the document.
+2. **Schedule a local Sunday notification** *if the browser supports the Notification Triggers API* (`'showTrigger' in Notification.prototype`). On supported browsers (currently Chromium desktop only), the SW calls `registration.showNotification()` with a `TimestampTrigger` set to the next Sunday 21:00 in the user's local timezone. On any browser without this API, the SW does not schedule anything — the in-app Sunday Whisper modal (F1.1) is the guaranteed path. We do not poll, simulate, or use IndexedDB workarounds.
 
 ### GitHub Pages deployment
 
@@ -391,10 +388,14 @@ jobs:
 ### Annual Letter
 
 1. On `mounted()`, check: is today inside the user's birthday week?
-2. If yes:
-   - If a Letter exists with `unsealAt <= today` and `read === false`, show the **unseal** flow: "⌑ a letter from one year ago today" → reveal text → mark `read: true`.
-   - Else if no Letter exists with `sealedAt` inside the current birthday week, show the **write** flow: a quiet modal with a textarea: "write a paragraph to yourself, one year from now."
-   - Saving creates `{ text, sealedAt: now, unsealAt: nextYearBirthdayWeek, read: false }`.
+2. If yes, evaluate in this strict order:
+   1. **Unseal first.** If any Letter exists with `unsealAt <= today` and `read === false`, show the unseal flow: *"⌑ a letter from one year ago today"* → reveal text → mark `read: true`. The unseal modal is dismissed before continuing.
+   2. **Write second.** If no Letter exists with `sealedAt` falling inside the current birthday week, show the write flow: a quiet modal with a textarea: *"write a paragraph to yourself, one year from now."* Saving creates `{ text, sealedAt: now, unsealAt: nextYearBirthdayWeek, read: false }`.
+3. The two modals never appear at the same time. If both conditions are true on the same page load (the user just unsealed last year's letter and is now eligible to write next year's), the unseal modal closes and the write modal opens immediately after.
+
+### Echo + Anniversary (collision rule)
+
+Both `FzEcho` (F1.3) and `FzAnniversary` (F2.4) surface past content on page load. They never appear simultaneously. **Anniversary takes precedence**: if any Anniversary banner is shown for today, the Echo is suppressed for that load. This means recurring weekly anniversaries are honored over random serendipity — the calendar wins.
 
 ### Constellation Lines
 
@@ -418,9 +419,18 @@ jobs:
 
 ### Monday Ceremony
 
-1. A small interval (every 30 seconds) checks: has `currentWeekIndex` changed since last check?
-2. If yes, the previously-current hexagon plays the `dim` animation (~1.2s) and the new current hexagon plays the `birth` animation. The grid scroll position is preserved.
-3. If `meta.lastMondayCeremony` is not today, also show a one-line notice: "a week passed."
+There are two distinct paths — live and after-the-fact:
+
+**Live (the page is open at midnight Monday):**
+1. While the page is open, a `setTimeout` is scheduled for the exact moment the next current week begins (computed from `useTime`).
+2. When it fires, the previously-current hexagon plays the `dim` animation (~1.2s) and the new current hexagon plays the `birth` animation. The grid scroll position is preserved. A new `setTimeout` is scheduled for the following week.
+3. The session-only animation does not write to localStorage.
+
+**After-the-fact (the user opens the page sometime after a week change):**
+1. On `mounted()`, compute `currentWeekIndex` and compare to `meta.lastVisitedWeek`.
+2. If `currentWeekIndex > meta.lastVisitedWeek`, show the one-line notice *"a week passed."* (or *"N weeks passed."* if more than one). The notice is dismissed on click or after 6 seconds.
+3. Update `meta.lastVisitedWeek = currentWeekIndex`.
+4. On first ever load (`lastVisitedWeek` undefined), no notice is shown — just initialize the field.
 
 ### Solstice / Equinox treatment
 
@@ -499,8 +509,10 @@ Auto-switches via `prefers-color-scheme` unless the user has set a manual overri
 
 - All visual components. Animations, layout, color, hover behavior.
 - The PWA install prompt (manual test on iOS, Android, desktop Chrome).
-- The Sunday push (manual test by setting system clock to Sunday 21:00).
-- The Annual Letter unseal (manual test by setting `unsealAt` to a past date).
+- The Sunday push (manual test on Chromium desktop with system clock set to Sunday 21:00).
+- The Annual Letter unseal (manual test by setting `unsealAt` to a past date in localStorage).
+- The Monday Ceremony live transition (manual test by setting `lastVisitedWeek` to a past index, or by waiting until midnight).
+- The Solstice / Equinox treatment (manual test by spoofing today's date in `useSolstice`).
 
 ### Test command
 
