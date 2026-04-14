@@ -181,8 +181,13 @@ export function usePwa(): UsePwaReturn {
       return
     }
     pushEnabled.value = false
-    if (registration !== null) {
-      await cancelSundayPush(registration)
+    // Same race-avoidance as enablePush: if the user opts out before
+    // the SW registration promise has resolved, await it so we
+    // actually cancel the pending notification instead of leaving it
+    // to fire once from a prior session's schedule.
+    const reg = registration ?? await register()
+    if (reg !== null) {
+      await cancelSundayPush(reg)
     }
   }
 
