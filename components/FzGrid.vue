@@ -4,13 +4,17 @@ import { useFzState } from '../composables/useFzState'
 import { currentGridIndex, weekRange, totalWeeks } from '../composables/useTime'
 
 interface Props {
-  /** Whether the modal is open (suppresses hover text) */
+  /** Whether a modal is open (suppresses hover text) */
   modalOpen?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modalOpen: false,
 })
+
+const emit = defineEmits<{
+  hexClick: [week: number]
+}>()
 
 const { state } = useFzState()
 const today = ref(new Date())
@@ -36,12 +40,20 @@ function getState(index: number): 'past' | 'current' | 'future' {
 function getHoverText(index: number): string {
   if (dobDate.value === null) return ''
   const range = weekRange(dobDate.value, index)
-  // UTC-pinned locale display: a DOB like "1990-05-15" parses as UTC
-  // midnight. Rendering it in local time would shift it back one day for
-  // users west of UTC (the entire Americas), so we pin both endpoints to
-  // UTC to preserve the calendar date the user actually entered.
   const opts: Intl.DateTimeFormatOptions = { timeZone: 'UTC' }
   return `${range.start.toLocaleDateString(undefined, opts)} - ${range.end.toLocaleDateString(undefined, opts)}`
+}
+
+function markFor(index: number): string | undefined {
+  return state.value?.weeks[index]?.mark
+}
+
+function whisperFor(index: number): string | undefined {
+  return state.value?.weeks[index]?.whisper
+}
+
+function onHexClick(index: number): void {
+  emit('hexClick', index)
 }
 
 function scrollToCurrent(): void {
@@ -66,10 +78,14 @@ defineExpose({ scrollToCurrent })
       v-for="i in indices"
       :id="i === currentIndex ? 'current-week' : undefined"
       :key="i"
+      v-memo="[i === currentIndex, markFor(i), whisperFor(i), props.modalOpen]"
       :index="i"
       :state="getState(i)"
       :hover-text="getHoverText(i)"
+      :mark="markFor(i)"
+      :whisper="whisperFor(i)"
       :modal-open="props.modalOpen"
+      @click="onHexClick(i)"
     />
   </div>
 </template>
