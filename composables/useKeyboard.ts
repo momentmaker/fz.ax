@@ -49,6 +49,11 @@ function normalizeKey(rawKey: string): ShortcutKey | null {
 }
 
 function onKeyDown(event: KeyboardEvent): void {
+  // Skip any key combo with a modifier — Ctrl+V / Cmd+V is paste,
+  // Alt+V is a deadkey on some layouts, Ctrl+/ is the find shortcut
+  // on some browsers. Without this guard, a user pasting whispers
+  // from the clipboard would have the vow modal open on every paste.
+  if (event.ctrlKey || event.metaKey || event.altKey) return
   const key = normalizeKey(event.key)
   if (key === null) return
   // Escape always fires. V/Q// only fire when not in an input.

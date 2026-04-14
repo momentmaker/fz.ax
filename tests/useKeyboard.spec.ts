@@ -5,6 +5,16 @@ function pressKey(key: string): void {
   window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }))
 }
 
+function pressKeyWith(key: string, modifiers: { ctrl?: boolean; meta?: boolean; alt?: boolean }): void {
+  window.dispatchEvent(new KeyboardEvent('keydown', {
+    key,
+    bubbles: true,
+    ctrlKey: modifiers.ctrl ?? false,
+    metaKey: modifiers.meta ?? false,
+    altKey: modifiers.alt ?? false,
+  }))
+}
+
 describe('useKeyboard', () => {
   beforeEach(() => {
     localStorage.clear()
@@ -85,5 +95,40 @@ describe('useKeyboard', () => {
     useKeyboard().on('v', fn)
     pressKey('v')
     expect(fn).toHaveBeenCalledOnce()
+  })
+
+  it('does NOT fire v handler on Ctrl+V (paste)', () => {
+    // #given a registered v handler
+    const fn = vi.fn()
+    useKeyboard().init()
+    useKeyboard().on('v', fn)
+    // #when the user presses Ctrl+V to paste
+    pressKeyWith('v', { ctrl: true })
+    // #then the vow handler does NOT fire — paste is a paste
+    expect(fn).not.toHaveBeenCalled()
+  })
+
+  it('does NOT fire v handler on Cmd+V (Mac paste)', () => {
+    const fn = vi.fn()
+    useKeyboard().init()
+    useKeyboard().on('v', fn)
+    pressKeyWith('v', { meta: true })
+    expect(fn).not.toHaveBeenCalled()
+  })
+
+  it('does NOT fire q handler on Ctrl+Q', () => {
+    const fn = vi.fn()
+    useKeyboard().init()
+    useKeyboard().on('q', fn)
+    pressKeyWith('q', { ctrl: true })
+    expect(fn).not.toHaveBeenCalled()
+  })
+
+  it('does NOT fire / handler on Ctrl+/ (browser find)', () => {
+    const fn = vi.fn()
+    useKeyboard().init()
+    useKeyboard().on('/', fn)
+    pressKeyWith('/', { ctrl: true })
+    expect(fn).not.toHaveBeenCalled()
   })
 })
