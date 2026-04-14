@@ -110,17 +110,27 @@ export function usePwa(): UsePwaReturn {
 
   async function promptInstall(): Promise<void> {
     if (deferredPrompt === null) return
-    await deferredPrompt.prompt()
+    // Claim the deferred prompt immediately so a rapid double-tap
+    // can't re-enter and call .prompt() on a consumed event (which
+    // throws per spec — beforeinstallprompt is single-use). Hide the
+    // button optimistically. If Chrome decides the user is still a
+    // valid install candidate after dismiss, it will fire
+    // beforeinstallprompt again and the listener will re-show it.
+    const prompt = deferredPrompt
+    deferredPrompt = null
+    canInstall.value = false
     try {
-      const choice = await deferredPrompt.userChoice
-      if (choice.outcome === 'accepted') {
-        canInstall.value = false
-      }
+      await prompt.prompt()
+      await prompt.userChoice
+      // outcome === 'accepted' is also signalled by 'appinstalled'
+      // which sets isInstalled = true. Dismiss leaves canInstall as
+      // false until a fresh beforeinstallprompt fires.
     }
     catch {
-      // user dismissed the dialog — leave canInstall alone
+      // Some browsers throw if .prompt() is called outside a user
+      // gesture or after the event was consumed elsewhere. Nothing
+      // more to do — the consumed event is discarded.
     }
-    deferredPrompt = null
   }
 
   async function register(): Promise<ServiceWorkerRegistration | null> {
@@ -142,7 +152,15 @@ export function usePwa(): UsePwaReturn {
         return reg
       }
       catch {
+        // Clear BOTH the resolved registration and the inflight
+        // promise. Otherwise a transient first-visit failure (flaky
+        // network, CSP hiccup) would permanently poison the singleton:
+        // every subsequent caller would short-circuit on
+        // registrationPromise and get the same already-resolved-to-null
+        // promise back, with no way to retry. Nulling the promise
+        // lets the next call to register() retry from scratch.
         registration = null
+        registrationPromise = null
         return null
       }
     })()

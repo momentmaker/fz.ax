@@ -17,6 +17,8 @@ export default defineNuxtConfig({
         { name: 'description', content: 'your life visualized in hexagons' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         { name: 'apple-mobile-web-app-title', content: '4000' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
         { name: 'theme-color', content: '#F7B808' }
       ],
       link: [
