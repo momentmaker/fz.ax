@@ -1,6 +1,7 @@
 import { computed, type ComputedRef, type Ref } from 'vue'
 import type { FzState } from '../types/state'
 import { hashString } from '../utils/hash'
+import { localDateString } from '../utils/date'
 import { weekIndex } from './useTime'
 
 export interface EchoEntry {
@@ -48,16 +49,9 @@ export function useEcho(
     if (eligible.length === 0) return null
 
     // Deterministic pick seeded by today's local-date string.
-    const todayKey = formatLocalDate(today.value)
+    const todayKey = localDateString(today.value)
     const seed = hashString(todayKey)
     const pick = eligible[seed % eligible.length]
     return pick ?? null
   })
-}
-
-function formatLocalDate(date: Date): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
 }

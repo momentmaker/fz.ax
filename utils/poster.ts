@@ -1,5 +1,6 @@
 import type { FzState } from '../types/state'
 import { totalWeeks, weekIndex } from '../composables/useTime'
+import { localDateString } from './date'
 
 /**
  * Generate an ISO A2 SVG poster (420 × 594 mm) of the user's 4000-hexagon
@@ -86,7 +87,7 @@ export function generatePoster(state: FzState, today: Date = new Date()): string
   }
 
   // Footer
-  const exportDate = today.toISOString().slice(0, 10)
+  const exportDate = localDateString(today)
   const longNowYear = `0${today.getFullYear()}`
   const footerY = HEIGHT - 25
   parts.push(
@@ -106,7 +107,7 @@ export function downloadPoster(state: FzState, today: Date = new Date()): void {
   const svg = generatePoster(state, today)
   const blob = new Blob([svg], { type: 'image/svg+xml' })
   const url = URL.createObjectURL(blob)
-  const dateStr = today.toISOString().slice(0, 10)
+  const dateStr = localDateString(today)
   const a = document.createElement('a')
   a.href = url
   a.download = `fz-ax-poster-${dateStr}.svg`

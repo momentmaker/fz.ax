@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useFzState } from '../composables/useFzState'
 import { useEcho } from '../composables/useEcho'
 import { weekRange } from '../composables/useTime'
+import { localDateString } from '../utils/date'
 
 const { state, setLastEcho } = useFzState()
 const today = ref(new Date())
@@ -11,13 +12,7 @@ const echo = useEcho(state, today)
 const visible = ref(false)
 let dismissTimer: ReturnType<typeof setTimeout> | null = null
 
-const todayDateStr = computed(() => {
-  const d = today.value
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-})
+const todayDateStr = computed(() => localDateString(today.value))
 
 const dateRangeLabel = computed(() => {
   if (echo.value === null || state.value === null) return ''

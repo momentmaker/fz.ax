@@ -1,14 +1,13 @@
 import type { FzState } from '../types/state'
+import { localDateString } from '../utils/date'
 
 /**
- * Returns the local YYYY-MM-DD string for a date. Used to key the
- * Sunday-prompt-already-shown-today check in meta.lastSundayPrompt.
+ * Returns the local YYYY-MM-DD string for a date. Kept as a re-export so
+ * existing callers don't break; new code should import `localDateString`
+ * from `utils/date` directly.
  */
 export function sundayDateString(date: Date): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
+  return localDateString(date)
 }
 
 /**

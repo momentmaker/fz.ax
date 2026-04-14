@@ -1,5 +1,6 @@
 import type { FzState } from '../types/state'
 import { isValidFzState } from './storage'
+import { localDateString } from './date'
 
 /**
  * Export the entire state as a JSON string wrapped in a small envelope
@@ -45,7 +46,7 @@ export function downloadBackup(state: FzState, today: Date = new Date()): void {
   const json = exportBackup(state, today)
   const blob = new Blob([json], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
-  const dateStr = formatLocalDate(today)
+  const dateStr = localDateString(today)
   const a = document.createElement('a')
   a.href = url
   a.download = `fz-ax-backup-${dateStr}.json`
@@ -53,11 +54,4 @@ export function downloadBackup(state: FzState, today: Date = new Date()): void {
   a.click()
   document.body.removeChild(a)
   setTimeout(() => URL.revokeObjectURL(url), 100)
-}
-
-function formatLocalDate(date: Date): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
 }
