@@ -74,4 +74,31 @@ describe('generatePoster', () => {
     const count = (svg.match(/<text x="/g) ?? []).length
     expect(count).toBe(4003)
   })
+
+  it('renders an anchor ring for each anchored week', () => {
+    // #given a state with a single anchored week
+    const state: FzState = {
+      version: 1,
+      dob: '1990-05-15',
+      weeks: { 100: { mark: '⭐', markedAt: '2025-01-01T00:00:00.000Z' } },
+      vow: null,
+      letters: [],
+      anchors: [100],
+      prefs: DEFAULT_PREFS,
+      meta: { createdAt: '2020-01-01T00:00:00.000Z' },
+    }
+    // #when we generate the poster SVG
+    const svg = generatePoster(state, new Date(2026, 3, 14))
+    // #then it includes a rect with the anchor red stroke
+    expect(svg).toContain('stroke="#ff3b30"')
+  })
+
+  it('does not render anchor rings when there are no anchors', () => {
+    // #given a state with marks but no anchors
+    const state = stateWith({
+      100: { mark: '⭐', markedAt: '2025-01-01T00:00:00.000Z' },
+    })
+    const svg = generatePoster(state, new Date(2026, 3, 14))
+    expect(svg).not.toContain('stroke="#ff3b30"')
+  })
 })

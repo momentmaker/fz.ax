@@ -66,6 +66,10 @@ export function generatePoster(state: FzState, today: Date = new Date()): string
     `<text x="${WIDTH / 2}" y="${TITLE_Y}" font-size="${TITLE_SIZE}" font-weight="900" fill="${yellow}" text-anchor="middle">four-thousand weekz</text>`,
   )
 
+  // Build a Set for O(1) anchor lookup during the loop.
+  const anchorSet = new Set(state.anchors)
+  const anchorRed = '#ff3b30'
+
   // Grid
   for (let i = 0; i < totalWeeks; i++) {
     const col = i % COLS
@@ -97,6 +101,17 @@ export function generatePoster(state: FzState, today: Date = new Date()): string
     parts.push(
       `<text x="${cx.toFixed(2)}" y="${cy.toFixed(2)}" font-size="${(CELL_SIZE * 0.75).toFixed(2)}" fill="${fill}" text-anchor="middle" dominant-baseline="central">${escapeXml(glyph)}</text>`,
     )
+
+    if (anchorSet.has(i)) {
+      // Anchored weeks get a 0.6mm-stroke red square ring around their
+      // cell — the same red as on-screen, scaled to A2 cell size.
+      const ringX = (cx - CELL_SIZE / 2 + 0.4).toFixed(2)
+      const ringY = (cy - CELL_SIZE / 2 + 0.4).toFixed(2)
+      const ringSize = (CELL_SIZE - 0.8).toFixed(2)
+      parts.push(
+        `<rect x="${ringX}" y="${ringY}" width="${ringSize}" height="${ringSize}" fill="none" stroke="${anchorRed}" stroke-width="0.6"/>`,
+      )
+    }
   }
 
   // Footer
