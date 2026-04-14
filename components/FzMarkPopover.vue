@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
 import { useFzState } from '../composables/useFzState'
+import { useHighlight } from '../composables/useHighlight'
 import { usePalette } from '../composables/usePalette'
 import { weekRange } from '../composables/useTime'
 import { isSingleGrapheme } from '../utils/grapheme'
@@ -18,6 +19,7 @@ const emit = defineEmits<{
 const { state, setMark, setWhisper, clearMark } = useFzState()
 const today = ref(new Date())
 const palette = usePalette(state, today)
+const highlight = useHighlight()
 
 const oneCharInput = ref<HTMLInputElement | null>(null)
 const firstPaletteButton = ref<HTMLButtonElement | null>(null)
@@ -87,6 +89,15 @@ function onClear(): void {
     // Storage failure (quota / disabled). The mark stays in memory but
     // we still close the popover so the user isn't stuck.
   }
+  emit('close')
+}
+
+function onConstellation(): void {
+  if (props.weekIndex === null) return
+  if (state.value === null) return
+  const entry = state.value.weeks[props.weekIndex]
+  if (entry === undefined) return
+  highlight.setConstellation(state.value, entry.mark, props.weekIndex)
   emit('close')
 }
 
@@ -195,6 +206,13 @@ function setFirstPaletteRef(el: unknown, i: number): void {
           @click="onClear"
         >clear</button>
         <span v-else />
+        <button
+          v-if="currentEntry !== null"
+          class="pop-constellation"
+          aria-label="show constellation of this mark"
+          title="constellation"
+          @click="onConstellation"
+        >✦</button>
         <button class="btn-76" @click="onClose">4⬢⏣⬡</button>
       </div>
     </div>
@@ -372,6 +390,22 @@ function setFirstPaletteRef(el: unknown, i: number): void {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-weight: 700;
+}
+
+.pop-constellation {
+  background: white;
+  border: 1.5px solid #0847F7;
+  color: #F7B808;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 0.3rem 0.55rem;
+  font-size: 0.9rem;
+}
+
+.pop-constellation:hover,
+.pop-constellation:focus-visible {
+  background: #fffbe6;
+  outline: none;
 }
 
 .btn-76 {
