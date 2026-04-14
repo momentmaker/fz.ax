@@ -20,6 +20,10 @@ interface Props {
   dim?: boolean
   /** Whether this week is anchored as a life landmark */
   anchored?: boolean
+  /** Whether this week contains a birthday anniversary (Stage 6 F3.2) */
+  birthday?: boolean
+  /** Whether the keyboard cursor is currently on this week (Stage 6 F3.5) */
+  cursor?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -29,6 +33,8 @@ const props = withDefaults(defineProps<Props>(), {
   lit: false,
   dim: false,
   anchored: false,
+  birthday: false,
+  cursor: false,
 })
 
 const emit = defineEmits<{
@@ -98,6 +104,8 @@ function onTouchEnd(_event: TouchEvent): void {
       'lit': lit,
       'dim': dim && !lit,
       'anchored': anchored,
+      'birthday': birthday,
+      'cursor': cursor,
     }"
     @click="onClick"
     @contextmenu="onContextMenu"
@@ -223,6 +231,24 @@ function onTouchEnd(_event: TouchEvent): void {
 
 .hexagon.anchored:hover {
   box-shadow: 0 0 6px var(--fz-red);
+}
+
+.hexagon.birthday::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--fz-yellow);
+  border-radius: 50%;
+  box-shadow: 0 0 3px rgba(247, 184, 8, 0.4);
+  pointer-events: none;
+}
+
+.hexagon.cursor::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border: 1.5px solid var(--fz-blue);
+  pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
