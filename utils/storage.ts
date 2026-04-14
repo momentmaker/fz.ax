@@ -96,9 +96,9 @@ export function isValidFzState(value: unknown): value is FzState {
     isReasonableDob(v.dob) &&
     hasValidWeeks(v.weeks) &&
     hasValidVow(v.vow) &&
-    Array.isArray(v.letters) &&
+    hasValidLetters(v.letters) &&
     hasValidAnchors(v.anchors) &&
-    typeof v.prefs === 'object' && v.prefs !== null &&
+    hasValidPrefs(v.prefs) &&
     typeof v.meta === 'object' && v.meta !== null
   )
 }
@@ -164,6 +164,45 @@ function hasValidAnchors(anchors: unknown): anchors is number[] {
     if (a < 0 || a >= totalWeeks) return false
     if (a <= prev) return false
     prev = a
+  }
+  return true
+}
+
+/**
+ * Validate the letters array. Stage 6 introduces annual letters
+ * via writeAnnualLetter. Each letter has text (1-2000 chars),
+ * parseable sealedAt timestamp, ISO-date unsealAt, boolean read.
+ * Array must be sorted ascending by sealedAt.
+ */
+function hasValidLetters(letters: unknown): letters is { text: string; sealedAt: string; unsealAt: string; read: boolean }[] {
+  if (!Array.isArray(letters)) return false
+  let prevSealedAt = ''
+  for (const l of letters) {
+    if (typeof l !== 'object' || l === null) return false
+    const e = l as Record<string, unknown>
+    if (typeof e.text !== 'string') return false
+    if (e.text.length === 0 || e.text.length > 2000) return false
+    if (typeof e.sealedAt !== 'string') return false
+    if (Number.isNaN(new Date(e.sealedAt).getTime())) return false
+    if (typeof e.unsealAt !== 'string') return false
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(e.unsealAt)) return false
+    if (typeof e.read !== 'boolean') return false
+    if (prevSealedAt !== '' && e.sealedAt < prevSealedAt) return false
+    prevSealedAt = e.sealedAt
+  }
+  return true
+}
+
+/**
+ * Validate the prefs object shape. Stage 6 tightens the check
+ * beyond "is an object" to also validate prefs.theme is one of
+ * 'auto' | 'light' | 'dark' or undefined.
+ */
+function hasValidPrefs(prefs: unknown): boolean {
+  if (typeof prefs !== 'object' || prefs === null) return false
+  const p = prefs as Record<string, unknown>
+  if (p.theme !== undefined && p.theme !== 'auto' && p.theme !== 'light' && p.theme !== 'dark') {
+    return false
   }
   return true
 }

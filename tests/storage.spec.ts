@@ -318,6 +318,122 @@ describe('storage validation: anchors', () => {
   })
 })
 
+describe('storage validation: letters', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
+  it('accepts a state with empty letters', () => {
+    const ok = { ...sampleState, letters: [] }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ok))
+    expect(readState()).not.toBeNull()
+  })
+
+  it('accepts a state with a valid LetterEntry', () => {
+    const ok = {
+      ...sampleState,
+      letters: [
+        { text: 'hello future me', sealedAt: '2025-05-15T00:00:00.000Z', unsealAt: '2026-05-15', read: false },
+      ],
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ok))
+    expect(readState()).not.toBeNull()
+  })
+
+  it('rejects a non-array letters field', () => {
+    const bad = { ...sampleState, letters: 'not-an-array' } as unknown as typeof sampleState
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    expect(readState()).toBeNull()
+  })
+
+  it('rejects a letter with empty text', () => {
+    const bad = {
+      ...sampleState,
+      letters: [{ text: '', sealedAt: '2025-05-15T00:00:00.000Z', unsealAt: '2026-05-15', read: false }],
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    expect(readState()).toBeNull()
+  })
+
+  it('rejects a letter with text > 2000 chars', () => {
+    const bad = {
+      ...sampleState,
+      letters: [{ text: 'x'.repeat(2001), sealedAt: '2025-05-15T00:00:00.000Z', unsealAt: '2026-05-15', read: false }],
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    expect(readState()).toBeNull()
+  })
+
+  it('rejects a letter with unparseable sealedAt', () => {
+    const bad = {
+      ...sampleState,
+      letters: [{ text: 'ok', sealedAt: 'not-a-date', unsealAt: '2026-05-15', read: false }],
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    expect(readState()).toBeNull()
+  })
+
+  it('rejects a letter with unparseable unsealAt', () => {
+    const bad = {
+      ...sampleState,
+      letters: [{ text: 'ok', sealedAt: '2025-05-15T00:00:00.000Z', unsealAt: 'garbage', read: false }],
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    expect(readState()).toBeNull()
+  })
+
+  it('rejects a letter with non-boolean read', () => {
+    const bad = {
+      ...sampleState,
+      letters: [{ text: 'ok', sealedAt: '2025-05-15T00:00:00.000Z', unsealAt: '2026-05-15', read: 'yes' }],
+    } as unknown as typeof sampleState
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    expect(readState()).toBeNull()
+  })
+
+  it('rejects letters not sorted by sealedAt', () => {
+    const bad = {
+      ...sampleState,
+      letters: [
+        { text: 'b', sealedAt: '2026-05-15T00:00:00.000Z', unsealAt: '2027-05-15', read: false },
+        { text: 'a', sealedAt: '2025-05-15T00:00:00.000Z', unsealAt: '2026-05-15', read: false },
+      ],
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    expect(readState()).toBeNull()
+  })
+})
+
+describe('storage validation: prefs.theme', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
+  it('accepts prefs.theme = auto', () => {
+    const ok = { ...sampleState, prefs: { ...sampleState.prefs, theme: 'auto' as const } }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ok))
+    expect(readState()).not.toBeNull()
+  })
+
+  it('accepts prefs.theme = light', () => {
+    const ok = { ...sampleState, prefs: { ...sampleState.prefs, theme: 'light' as const } }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ok))
+    expect(readState()).not.toBeNull()
+  })
+
+  it('accepts prefs.theme = dark', () => {
+    const ok = { ...sampleState, prefs: { ...sampleState.prefs, theme: 'dark' as const } }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ok))
+    expect(readState()).not.toBeNull()
+  })
+
+  it('rejects prefs.theme = invalid string', () => {
+    const bad = { ...sampleState, prefs: { ...sampleState.prefs, theme: 'garbage' } } as unknown as typeof sampleState
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(bad))
+    expect(readState()).toBeNull()
+  })
+})
+
 describe('storage with a hostile localStorage', () => {
   beforeEach(() => {
     // #given a clean storage so hostile patches start from zero
