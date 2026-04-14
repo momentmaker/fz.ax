@@ -387,6 +387,45 @@ describe('useFzState', () => {
     })
   })
 
+  describe('setPushOptIn', () => {
+    it('throws when state is null', () => {
+      const { setPushOptIn } = useFzState()
+      expect(() => setPushOptIn(true)).toThrow(/no state/i)
+    })
+
+    it('sets prefs.pushOptIn to true', () => {
+      const { state, setDob, setPushOptIn } = useFzState()
+      setDob('1990-05-15')
+      setPushOptIn(true)
+      expect(state.value!.prefs.pushOptIn).toBe(true)
+    })
+
+    it('sets prefs.pushOptIn to false', () => {
+      const { state, setDob, setPushOptIn } = useFzState()
+      setDob('1990-05-15')
+      setPushOptIn(true)
+      setPushOptIn(false)
+      expect(state.value!.prefs.pushOptIn).toBe(false)
+    })
+
+    it('persists to localStorage', () => {
+      const { setDob, setPushOptIn } = useFzState()
+      setDob('1990-05-15')
+      setPushOptIn(true)
+      const raw = localStorage.getItem(STORAGE_KEY)
+      expect(JSON.parse(raw!).prefs.pushOptIn).toBe(true)
+    })
+
+    it('preserves other prefs fields', () => {
+      const { state, setDob, setPushOptIn } = useFzState()
+      setDob('1990-05-15')
+      const beforeTheme = state.value!.prefs.theme
+      setPushOptIn(true)
+      expect(state.value!.prefs.theme).toBe(beforeTheme)
+      expect(state.value!.prefs.weekStart).toBe('mon')
+    })
+  })
+
   describe('replaceState', () => {
     it('replaces an existing state', () => {
       const { state, setDob, replaceState } = useFzState()
