@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue'
 import { useFzState } from '../composables/useFzState'
 import { totalWeeks } from '../composables/useTime'
+import { isReasonableDob } from '../utils/dob'
 
 interface Props {
   open: boolean
@@ -32,7 +33,7 @@ function defaultFourThousandWeeksAgo(): string {
 }
 
 function save(): void {
-  if (localDob.value === '') return
+  if (!isReasonableDob(localDob.value)) return
   setDob(localDob.value)
   emit('saved')
   emit('close')

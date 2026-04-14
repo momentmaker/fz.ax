@@ -51,7 +51,12 @@ onMounted(() => {
   if (state.value === null) {
     showModal.value = true
   }
-  document.body.appendChild(document.createComment(ASCII_HEXAGON))
+  // Idempotent append — a window flag prevents HMR duplicates in dev.
+  const w = window as Window & { __fzEggAdded?: boolean }
+  if (w.__fzEggAdded !== true) {
+    document.body.appendChild(document.createComment(ASCII_HEXAGON))
+    w.__fzEggAdded = true
+  }
 })
 </script>
 

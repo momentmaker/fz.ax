@@ -11,13 +11,34 @@ export function readState(): FzState | null {
   if (raw === null) return null
   try {
     const parsed: unknown = JSON.parse(raw)
-    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
-      return null
-    }
-    return parsed as FzState
+    if (!isValidFzState(parsed)) return null
+    return parsed
   } catch {
     return null
   }
+}
+
+/**
+ * Narrow validation — confirms the parsed blob has the minimum shape required
+ * to be treated as an FzState. Does NOT deep-check every field; that would
+ * grow the storage layer into a schema validator. We only verify the fields
+ * that downstream code would crash on if missing.
+ */
+function isValidFzState(value: unknown): value is FzState {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    return false
+  }
+  const v = value as Record<string, unknown>
+  return (
+    v.version === 1 &&
+    typeof v.dob === 'string' &&
+    typeof v.weeks === 'object' && v.weeks !== null && !Array.isArray(v.weeks) &&
+    (v.vow === null || typeof v.vow === 'object') &&
+    Array.isArray(v.letters) &&
+    Array.isArray(v.anchors) &&
+    typeof v.prefs === 'object' && v.prefs !== null &&
+    typeof v.meta === 'object' && v.meta !== null
+  )
 }
 
 /**
