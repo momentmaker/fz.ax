@@ -219,6 +219,24 @@ function setPushOptIn(value: boolean): void {
 }
 
 /**
+ * Update prefs.theme. F3.4 Dark Mode — 'auto' follows the OS
+ * preference via prefers-color-scheme, 'light' and 'dark' are
+ * manual overrides persisted across sessions.
+ */
+function setTheme(theme: 'auto' | 'light' | 'dark'): void {
+  const state = ensureLoaded()
+  const current = assertState()
+  const next: FzState = {
+    ...current,
+    prefs: { ...current.prefs, theme },
+  }
+  if (!writeState(next)) {
+    throw new Error('useFzState: failed to persist state (storage disabled or quota exceeded)')
+  }
+  state.value = next
+}
+
+/**
  * Set or replace the yearly Vow. Trims whitespace before validation.
  * Text must be 1-240 chars after trim (an empty vow is meaningless;
  * 240 chars is the soft cap that mirrors WeekEntry.whisper).
@@ -402,6 +420,7 @@ export interface UseFzStateReturn {
   setLastSundayPrompt: (dateStr: string) => void
   setLastEcho: (dateStr: string) => void
   setPushOptIn: (value: boolean) => void
+  setTheme: (theme: 'auto' | 'light' | 'dark') => void
   setVow: (text: string) => void
   clearVow: () => void
   addAnchor: (week: number) => void
@@ -426,6 +445,7 @@ export function useFzState(): UseFzStateReturn {
     setLastSundayPrompt,
     setLastEcho,
     setPushOptIn,
+    setTheme,
     setVow,
     clearVow,
     addAnchor,

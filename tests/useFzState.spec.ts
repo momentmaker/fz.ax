@@ -744,4 +744,43 @@ describe('useFzState', () => {
       expect(state.value!.meta.lastVisitedWeek).toBe(1500)
     })
   })
+
+  describe('setTheme', () => {
+    it('throws when state is null', () => {
+      const { setTheme } = useFzState()
+      expect(() => setTheme('dark')).toThrow(/no state/i)
+    })
+
+    it('sets prefs.theme to dark', () => {
+      const { state, setDob, setTheme } = useFzState()
+      setDob('1990-05-15')
+      setTheme('dark')
+      expect(state.value!.prefs.theme).toBe('dark')
+    })
+
+    it('sets prefs.theme to light', () => {
+      const { state, setDob, setTheme } = useFzState()
+      setDob('1990-05-15')
+      setTheme('dark')
+      setTheme('light')
+      expect(state.value!.prefs.theme).toBe('light')
+    })
+
+    it('sets prefs.theme back to auto', () => {
+      const { state, setDob, setTheme } = useFzState()
+      setDob('1990-05-15')
+      setTheme('dark')
+      setTheme('auto')
+      expect(state.value!.prefs.theme).toBe('auto')
+    })
+
+    it('preserves other prefs fields', () => {
+      const { state, setDob, setPushOptIn, setTheme } = useFzState()
+      setDob('1990-05-15')
+      setPushOptIn(true)
+      setTheme('dark')
+      expect(state.value!.prefs.pushOptIn).toBe(true)
+      expect(state.value!.prefs.theme).toBe('dark')
+    })
+  })
 })
