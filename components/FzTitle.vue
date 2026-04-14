@@ -6,6 +6,7 @@ import { pastCount, futureCount } from '../composables/useTime'
 const emit = defineEmits<{
   openModal: []
   scrollToCurrent: []
+  openVow: []
 }>()
 
 const { state } = useFzState()
@@ -25,10 +26,16 @@ const future = computed(() => {
   if (dobDate.value === null) return 0
   return futureCount(dobDate.value, today.value)
 })
+
+const vowText = computed<string | null>(() => state.value?.vow?.text ?? null)
 </script>
 
 <template>
   <h1 class="title" @click="emit('openModal')">four-thousand weekz</h1>
+  <p class="vow-line" @click="emit('openVow')">
+    <em v-if="vowText !== null">{{ vowText }}</em>
+    <em v-else class="vow-empty">press v to set your vow</em>
+  </p>
   <h3 class="subtitle">
     <span class="ngmi">{{ past }}</span>-⬢
     <span class="beherenow" @click="emit('scrollToCurrent')">⏣</span>
@@ -65,6 +72,27 @@ const future = computed(() => {
 .beherenow {
   cursor: progress;
   font-size: 1.5rem;
+}
+
+.vow-line {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 300;
+  color: #0847F7;
+  letter-spacing: 0.05em;
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
+  cursor: text;
+  font-style: italic;
+}
+
+.vow-line:hover em {
+  border-bottom: 1px solid #0847F7;
+}
+
+.vow-empty {
+  color: #ccc;
 }
 
 @keyframes pulsate {
