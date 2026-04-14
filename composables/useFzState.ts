@@ -45,11 +45,21 @@ function resetState(): void {
 }
 
 /**
+ * The shape returned by useFzState. Exported so Stage 2+ can extend
+ * it cleanly when adding setMark, setWhisper, etc.
+ */
+export interface UseFzStateReturn {
+  state: Ref<FzState | null>
+  setDob: (dob: string) => void
+  resetState: () => void
+}
+
+/**
  * The composable. Returns the reactive state ref plus typed actions.
  * Later stages will add: setMark, setWhisper, clearMark, setVow,
  * writeAnnualLetter, unsealLetter, addAnchor, removeAnchor, setPref.
  */
-export function useFzState() {
+export function useFzState(): UseFzStateReturn {
   return {
     state: ensureLoaded(),
     setDob,

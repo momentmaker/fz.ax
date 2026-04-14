@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useFzState } from '../composables/useFzState'
+import { totalWeeks } from '../composables/useTime'
 
 interface Props {
   open: boolean
@@ -26,7 +27,7 @@ watch(
 )
 
 function defaultFourThousandWeeksAgo(): string {
-  const ms = 4000 * 7 * 24 * 60 * 60 * 1000
+  const ms = totalWeeks * 7 * 24 * 60 * 60 * 1000
   return new Date(Date.now() - ms).toISOString().slice(0, 10)
 }
 

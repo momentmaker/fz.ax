@@ -15,6 +15,8 @@ const props = withDefaults(defineProps<Props>(), {
 const { state } = useFzState()
 const today = ref(new Date())
 
+const indices: number[] = Array.from({ length: totalWeeks }, (_, i) => i)
+
 const dobDate = computed(() => {
   if (state.value === null) return null
   return new Date(state.value.dob)
@@ -36,12 +38,6 @@ function getHoverText(index: number): string {
   const range = weekRange(dobDate.value, index)
   return `${range.start.toLocaleDateString()} - ${range.end.toLocaleDateString()}`
 }
-
-const indices = computed(() => {
-  const arr: number[] = []
-  for (let i = 0; i < totalWeeks; i++) arr.push(i)
-  return arr
-})
 
 function scrollToCurrent(): void {
   void nextTick(() => {

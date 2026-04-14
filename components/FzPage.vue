@@ -18,12 +18,12 @@ function closeModal(): void {
   showModal.value = false
 }
 
-function onSaved(): void {
+function scrollToCurrent(): void {
   void gridRef.value?.scrollToCurrent()
 }
 
-function scrollToCurrent(): void {
-  void gridRef.value?.scrollToCurrent()
+function onSaved(): void {
+  scrollToCurrent()
 }
 
 const ASCII_HEXAGON = `
