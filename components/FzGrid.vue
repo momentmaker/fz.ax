@@ -63,8 +63,8 @@ defineExpose({ scrollToCurrent })
   <div class="hexagon-grid">
     <FzHexagon
       v-for="i in indices"
-      :key="i"
       :id="i === currentIndex ? 'current-week' : undefined"
+      :key="i"
       :index="i"
       :state="getState(i)"
       :hover-text="getHoverText(i)"

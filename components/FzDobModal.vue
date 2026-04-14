@@ -47,10 +47,10 @@ function onBackdropClick(): void {
     <div class="modal-content" @click.stop>
       <h2 class="modal-header">d⬡b</h2>
       <input
-        type="date"
         v-model="localDob"
+        type="date"
         @keyup.enter="save"
-      />
+      >
       <button class="btn-76" @click="save">4⬢⏣⬡</button>
       <div class="modal-subtitle">will be saved to your local browser storage</div>
     </div>

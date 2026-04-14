@@ -1,6 +1,6 @@
 import { ref, type Ref } from 'vue'
 import type { FzState } from '../types/state'
-import { readState, writeState, clearState } from '../utils/storage'
+import { writeState, clearState } from '../utils/storage'
 import { migrate, createFreshState } from '../utils/migrate'
 
 /**

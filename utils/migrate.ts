@@ -1,6 +1,5 @@
 import type { FzState } from '../types/state'
 import {
-  STORAGE_KEY,
   LEGACY_DOB_KEY,
   DEFAULT_PREFS,
 } from '../types/state'
