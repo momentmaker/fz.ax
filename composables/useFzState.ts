@@ -205,6 +205,43 @@ function setPushOptIn(value: boolean): void {
 }
 
 /**
+ * Set or replace the yearly Vow. Trims whitespace before validation.
+ * Text must be 1-240 chars after trim (an empty vow is meaningless;
+ * 240 chars is the soft cap that mirrors WeekEntry.whisper).
+ */
+function setVow(text: string): void {
+  const state = ensureLoaded()
+  const current = assertState()
+  const trimmed = text.trim()
+  if (trimmed.length === 0 || trimmed.length > 240) {
+    throw new Error('useFzState: vow text must be 1-240 chars after trim')
+  }
+  const next: FzState = {
+    ...current,
+    vow: { text: trimmed, writtenAt: new Date().toISOString() },
+  }
+  if (!writeState(next)) {
+    throw new Error('useFzState: failed to persist state (storage disabled or quota exceeded)')
+  }
+  state.value = next
+}
+
+/**
+ * Clear the Vow back to null. Idempotent — clearing an already-null
+ * vow is a successful no-op.
+ */
+function clearVow(): void {
+  const state = ensureLoaded()
+  const current = assertState()
+  if (current.vow === null) return
+  const next: FzState = { ...current, vow: null }
+  if (!writeState(next)) {
+    throw new Error('useFzState: failed to persist state (storage disabled or quota exceeded)')
+  }
+  state.value = next
+}
+
+/**
  * Replace the entire state — used by the backup restore flow. Validates
  * the incoming shape via isValidFzState and throws on rejection. Works
  * even when state is currently null (populates from an external source).
@@ -274,6 +311,8 @@ export interface UseFzStateReturn {
   setLastSundayPrompt: (dateStr: string) => void
   setLastEcho: (dateStr: string) => void
   setPushOptIn: (value: boolean) => void
+  setVow: (text: string) => void
+  clearVow: () => void
   replaceState: (next: FzState) => void
   resetState: () => void
 }
@@ -293,6 +332,8 @@ export function useFzState(): UseFzStateReturn {
     setLastSundayPrompt,
     setLastEcho,
     setPushOptIn,
+    setVow,
+    clearVow,
     replaceState,
     resetState,
   }

@@ -484,4 +484,84 @@ describe('useFzState', () => {
       expect(JSON.parse(raw!).dob).toBe('1991-06-16')
     })
   })
+
+  describe('setVow', () => {
+    it('throws when state is null', () => {
+      const { setVow } = useFzState()
+      expect(() => setVow('be present')).toThrow(/no state/i)
+    })
+
+    it('throws on empty text', () => {
+      const { setDob, setVow } = useFzState()
+      setDob('1990-05-15')
+      expect(() => setVow('')).toThrow(/1.*240/i)
+    })
+
+    it('throws on text longer than 240 chars', () => {
+      const { setDob, setVow } = useFzState()
+      setDob('1990-05-15')
+      expect(() => setVow('x'.repeat(241))).toThrow(/1.*240/i)
+    })
+
+    it('trims whitespace before validation', () => {
+      const { state, setDob, setVow } = useFzState()
+      setDob('1990-05-15')
+      setVow('   be present   ')
+      expect(state.value!.vow?.text).toBe('be present')
+    })
+
+    it('throws if trimmed text is empty (whitespace only)', () => {
+      const { setDob, setVow } = useFzState()
+      setDob('1990-05-15')
+      expect(() => setVow('   ')).toThrow(/1.*240/i)
+    })
+
+    it('persists writtenAt as an ISO string', () => {
+      const { state, setDob, setVow } = useFzState()
+      setDob('1990-05-15')
+      setVow('be present')
+      const writtenAt = state.value!.vow?.writtenAt ?? ''
+      expect(writtenAt).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+      expect(Number.isNaN(new Date(writtenAt).getTime())).toBe(false)
+    })
+
+    it('overwrites an existing vow', () => {
+      const { state, setDob, setVow } = useFzState()
+      setDob('1990-05-15')
+      setVow('first')
+      setVow('second')
+      expect(state.value!.vow?.text).toBe('second')
+    })
+
+    it('preserves other state fields', () => {
+      const { state, setDob, setMark, setVow } = useFzState()
+      setDob('1990-05-15')
+      setMark(42, 'x')
+      setVow('be present')
+      expect(state.value!.weeks[42]?.mark).toBe('x')
+      expect(state.value!.dob).toBe('1990-05-15')
+    })
+  })
+
+  describe('clearVow', () => {
+    it('throws when state is null', () => {
+      const { clearVow } = useFzState()
+      expect(() => clearVow()).toThrow(/no state/i)
+    })
+
+    it('sets vow back to null', () => {
+      const { state, setDob, setVow, clearVow } = useFzState()
+      setDob('1990-05-15')
+      setVow('be present')
+      clearVow()
+      expect(state.value!.vow).toBeNull()
+    })
+
+    it('is idempotent (clearing an already-null vow is a no-op)', () => {
+      const { state, setDob, clearVow } = useFzState()
+      setDob('1990-05-15')
+      expect(() => clearVow()).not.toThrow()
+      expect(state.value!.vow).toBeNull()
+    })
+  })
 })
