@@ -26,12 +26,26 @@ function ensureLoaded(): Ref<FzState | null> {
  * Set or replace the date of birth. If no state exists, create one from
  * scratch. If state exists, mutate just the dob field (preserving marks,
  * whispers, anchors, etc.). Persists immediately to localStorage.
+ *
+ * When the DOB actually changes, reset the date-keyed meta fields
+ * (lastVisitedWeek, lastEcho, lastSundayPrompt) because they refer to
+ * a different absolute timeline and would mis-trigger Monday/Echo/Sunday
+ * banners. Vow, anchors, weeks, and prefs all survive: they are personal
+ * content, not date-keyed cache.
  */
 function setDob(dob: string): void {
   const state = ensureLoaded()
   if (state.value === null) {
     state.value = createFreshState(dob)
-  } else {
+  }
+  else if (state.value.dob !== dob) {
+    const next: FzState = { ...state.value, dob, meta: { ...state.value.meta } }
+    delete next.meta.lastVisitedWeek
+    delete next.meta.lastEcho
+    delete next.meta.lastSundayPrompt
+    state.value = next
+  }
+  else {
     state.value = { ...state.value, dob }
   }
   writeState(state.value)

@@ -102,6 +102,45 @@ describe('useFzState', () => {
     })
   })
 
+  it('resets lastVisitedWeek, lastEcho, lastSundayPrompt when DOB changes', () => {
+    // #given a state with all the date-keyed meta fields populated
+    const { state, setDob, setLastVisitedWeek, setLastEcho, setLastSundayPrompt } = useFzState()
+    setDob('1990-05-15')
+    setLastVisitedWeek(1500)
+    setLastEcho('2026-04-14')
+    setLastSundayPrompt('2026-04-12')
+    // #when the user changes DOB
+    setDob('1985-01-01')
+    // #then the meta fields keyed by date or week-index are reset
+    expect(state.value!.meta.lastVisitedWeek).toBeUndefined()
+    expect(state.value!.meta.lastEcho).toBeUndefined()
+    expect(state.value!.meta.lastSundayPrompt).toBeUndefined()
+    // and the new dob is stored
+    expect(state.value!.dob).toBe('1985-01-01')
+  })
+
+  it('preserves vow, anchors, weeks, prefs on DOB change', () => {
+    const { state, setDob, setMark, setVow, addAnchor, setPushOptIn } = useFzState()
+    setDob('1990-05-15')
+    setMark(42, 'x')
+    setVow('be present')
+    addAnchor(100)
+    setPushOptIn(true)
+    setDob('1985-01-01')
+    expect(state.value!.weeks[42]?.mark).toBe('x')
+    expect(state.value!.vow?.text).toBe('be present')
+    expect(state.value!.anchors).toEqual([100])
+    expect(state.value!.prefs.pushOptIn).toBe(true)
+  })
+
+  it('does NOT reset meta when setDob is called with the same value', () => {
+    const { state, setDob, setLastVisitedWeek } = useFzState()
+    setDob('1990-05-15')
+    setLastVisitedWeek(1500)
+    setDob('1990-05-15')
+    expect(state.value!.meta.lastVisitedWeek).toBe(1500)
+  })
+
   it('resetState clears storage and the in-memory state', () => {
     // #given a composable with a set state
     const { state, setDob, resetState } = useFzState()
