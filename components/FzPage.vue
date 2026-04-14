@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useFzState } from '../composables/useFzState'
 
 const { state } = useFzState()
 const showModal = ref(false)
 const gridRef = ref<{ scrollToCurrent: () => void } | null>(null)
+
+const markPopoverOpen = ref(false)
+const markPopoverWeek = ref<number | null>(null)
 
 const containerClasses = computed(() => ({
   'modal-open': showModal.value,
@@ -24,6 +27,19 @@ function scrollToCurrent(): void {
 
 function onSaved(): void {
   scrollToCurrent()
+}
+
+function openMarkPopover(week: number): void {
+  markPopoverWeek.value = week
+  markPopoverOpen.value = true
+}
+
+function closeMarkPopover(): void {
+  markPopoverOpen.value = false
+  // Leave week set briefly so the closing transition can still render; null out next tick.
+  void nextTick(() => {
+    markPopoverWeek.value = null
+  })
 }
 
 const ASCII_HEXAGON = `
@@ -71,7 +87,16 @@ onMounted(() => {
       @close="closeModal"
       @saved="onSaved"
     />
-    <FzGrid ref="gridRef" :modal-open="showModal" />
+    <FzGrid
+      ref="gridRef"
+      :modal-open="showModal || markPopoverOpen"
+      @hex-click="openMarkPopover"
+    />
+    <FzMarkPopover
+      :open="markPopoverOpen"
+      :week-index="markPopoverWeek"
+      @close="closeMarkPopover"
+    />
   </div>
   <FzScrollHex />
 </template>
