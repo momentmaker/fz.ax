@@ -47,6 +47,34 @@ function resetState(): void {
 /**
  * The shape returned by useFzState. Exported so Stage 2+ can extend
  * it cleanly when adding setMark, setWhisper, etc.
+ *
+ * Guidance for Stage 2+ implementers:
+ *
+ *   1. **Validate at the composable boundary, not the call site.** `setDob`
+ *      currently trusts callers because `FzDobModal.isReasonableDob` guards
+ *      the UI input. Stage 2 actions (`setMark`, `setWhisper`, …) should
+ *      validate their own arguments — don't rely on UI discipline.
+ *
+ *   2. **noUncheckedIndexedAccess is enforced in this project.** Reading
+ *      `state.value.weeks[i]` yields `WeekEntry | undefined`. Handle the
+ *      `undefined` branch explicitly — do NOT use the `!` non-null
+ *      assertion. Upsert pattern:
+ *        state.value = {
+ *          ...state.value,
+ *          weeks: { ...state.value.weeks, [week]: nextEntry },
+ *        }
+ *
+ *   3. **Reference-replace triggers all consumers.** The top-level
+ *      `state.value = { ... }` pattern invalidates every consumer that
+ *      reads `state.value`. For a 4000-hexagon grid this means every mark
+ *      write re-renders every hexagon unless `FzGrid` uses `v-memo` or a
+ *      per-hexagon computed to short-circuit equal-mark renders. Plan for
+ *      this before `setMark` lands.
+ *
+ *   4. **Deep shape validation lives in `utils/storage.ts`.** `isValidFzState`
+ *      currently only checks top-level fields. Before Stage 2 reads
+ *      `state.value.weeks[i].mark`, either tighten the validator to check
+ *      `WeekEntry` shape or add a per-entry guard at every access site.
  */
 export interface UseFzStateReturn {
   state: Ref<FzState | null>

@@ -16,13 +16,25 @@ const MS_PER_WEEK = MS_PER_DAY * 7
 export const totalWeeks = 4000
 
 /**
- * The week index of `today` relative to `dob`. Clamped at 0 if today is
- * before dob (defensive against future-DOB inputs).
+ * The raw elapsed-week count between `dob` and `today`. Clamped at 0 if
+ * today is before dob (defensive against future-DOB inputs). NOT clamped
+ * at an upper bound — a caller that needs a grid-displayable index should
+ * use `currentGridIndex` instead.
  */
 export function weekIndex(dob: Date, today: Date): number {
   const diff = today.getTime() - dob.getTime()
   if (diff < 0) return 0
   return Math.floor(diff / MS_PER_WEEK)
+}
+
+/**
+ * The week index to use for grid display. Identical to `weekIndex` for
+ * users inside the 4000-week window; clamped at `totalWeeks - 1` for any
+ * user whose raw elapsed count has overflowed the grid (>77 years old).
+ * This is what FzGrid scrolls to and what pastCount reports.
+ */
+export function currentGridIndex(dob: Date, today: Date): number {
+  return Math.min(weekIndex(dob, today), totalWeeks - 1)
 }
 
 /**
@@ -43,16 +55,19 @@ export function isCurrentWeek(dob: Date, today: Date, index: number): boolean {
 }
 
 /**
- * Number of weeks before the current one. Equal to the current week index.
+ * Number of weeks before the current one, as shown in the grid. Clamped at
+ * `totalWeeks - 1` so a user whose raw elapsed count exceeds the grid
+ * still sees a count consistent with what the grid can render.
  */
 export function pastCount(dob: Date, today: Date): number {
-  return weekIndex(dob, today)
+  return currentGridIndex(dob, today)
 }
 
 /**
- * Number of weeks after the current one. Always non-negative.
+ * Number of weeks after the current one. Always non-negative, always
+ * consistent with `pastCount` (past + 1 + future = totalWeeks).
  */
 export function futureCount(dob: Date, today: Date): number {
-  const idx = weekIndex(dob, today)
+  const idx = currentGridIndex(dob, today)
   return Math.max(0, totalWeeks - 1 - idx)
 }

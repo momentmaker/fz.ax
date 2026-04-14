@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, nextTick } from 'vue'
 import { useFzState } from '../composables/useFzState'
-import { weekIndex, weekRange, totalWeeks } from '../composables/useTime'
+import { currentGridIndex, weekRange, totalWeeks } from '../composables/useTime'
 
 interface Props {
   /** Whether the modal is open (suppresses hover text) */
@@ -24,7 +24,7 @@ const dobDate = computed(() => {
 
 const currentIndex = computed(() => {
   if (dobDate.value === null) return 0
-  return weekIndex(dobDate.value, today.value)
+  return currentGridIndex(dobDate.value, today.value)
 })
 
 function getState(index: number): 'past' | 'current' | 'future' {
@@ -36,7 +36,12 @@ function getState(index: number): 'past' | 'current' | 'future' {
 function getHoverText(index: number): string {
   if (dobDate.value === null) return ''
   const range = weekRange(dobDate.value, index)
-  return `${range.start.toLocaleDateString()} - ${range.end.toLocaleDateString()}`
+  // UTC-pinned locale display: a DOB like "1990-05-15" parses as UTC
+  // midnight. Rendering it in local time would shift it back one day for
+  // users west of UTC (the entire Americas), so we pin both endpoints to
+  // UTC to preserve the calendar date the user actually entered.
+  const opts: Intl.DateTimeFormatOptions = { timeZone: 'UTC' }
+  return `${range.start.toLocaleDateString(undefined, opts)} - ${range.end.toLocaleDateString(undefined, opts)}`
 }
 
 function scrollToCurrent(): void {

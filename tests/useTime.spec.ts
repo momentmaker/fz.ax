@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   weekIndex,
+  currentGridIndex,
   weekRange,
   totalWeeks,
   isCurrentWeek,
@@ -132,5 +133,42 @@ describe('pastCount and futureCount', () => {
     const today = new Date('2010-06-15T00:00:00.000Z')
     // #then the conservation law holds
     expect(pastCount(dob, today) + 1 + futureCount(dob, today)).toBe(4000)
+  })
+
+  it('clamps the count at totalWeeks-1 for a user beyond the grid', () => {
+    // #given a dob ~6500 weeks ago (a 125-year-old — yes, possible per isReasonableDob)
+    const dob = new Date('1900-01-01T00:00:00.000Z')
+    const today = new Date('2026-01-01T00:00:00.000Z')
+    // #then pastCount is clamped and the conservation law still holds
+    expect(pastCount(dob, today)).toBe(totalWeeks - 1)
+    expect(futureCount(dob, today)).toBe(0)
+    expect(pastCount(dob, today) + 1 + futureCount(dob, today)).toBe(totalWeeks)
+  })
+})
+
+describe('currentGridIndex', () => {
+  it('matches weekIndex inside the grid window', () => {
+    // #given a typical mid-life dob/today pair
+    const dob = new Date('1990-01-01T00:00:00.000Z')
+    const today = new Date('2010-06-15T00:00:00.000Z')
+    // #then currentGridIndex matches weekIndex exactly
+    expect(currentGridIndex(dob, today)).toBe(weekIndex(dob, today))
+  })
+
+  it('clamps at totalWeeks-1 when weekIndex would exceed the grid', () => {
+    // #given a dob so old the user has outgrown the 4000-week window
+    const dob = new Date('1900-01-01T00:00:00.000Z')
+    const today = new Date('2026-01-01T00:00:00.000Z')
+    // #then the raw weekIndex is high but currentGridIndex is clamped
+    expect(weekIndex(dob, today)).toBeGreaterThan(totalWeeks - 1)
+    expect(currentGridIndex(dob, today)).toBe(totalWeeks - 1)
+  })
+
+  it('returns 0 for a future dob', () => {
+    // #given a future dob
+    const dob = new Date('2100-01-01T00:00:00.000Z')
+    const today = new Date('2026-01-01T00:00:00.000Z')
+    // #then the grid index is clamped at 0 (via weekIndex's floor)
+    expect(currentGridIndex(dob, today)).toBe(0)
   })
 })

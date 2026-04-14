@@ -1,6 +1,7 @@
 import type { FzState } from '../types/state'
 import { DEFAULT_PREFS } from '../types/state'
 import { readState, writeState, readLegacyDob, clearLegacyDob } from './storage'
+import { isReasonableDob } from './dob'
 
 /**
  * Build a brand-new FzState given a date of birth.
@@ -42,6 +43,16 @@ export function migrate(): FzState | null {
 
   const legacy = readLegacyDob()
   if (legacy === null) return null
+
+  // Guard the boundary: a legacy blob could contain anything if the user
+  // hand-edited it, a browser extension mangled it, or a prior buggy write
+  // happened. If the value is not a reasonable DOB, treat the migration as
+  // "no prior state" so first-run triggers and the user re-enters their DOB.
+  // Clear the legacy key either way so we don't re-evaluate it on next load.
+  if (!isReasonableDob(legacy)) {
+    clearLegacyDob()
+    return null
+  }
 
   const fresh = createFreshState(legacy)
   writeState(fresh)

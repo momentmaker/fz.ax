@@ -84,6 +84,40 @@ describe('migrate', () => {
     expect(result!.dob).toBe('1990-05-15')
   })
 
+  it('returns null and clears the key when legacy dob is unparseable', () => {
+    // #given a legacy dob that is total garbage
+    localStorage.setItem(LEGACY_DOB_KEY, 'not-a-date')
+    // #when we migrate
+    const result = migrate()
+    // #then the migration fails cleanly and the legacy key is gone
+    expect(result).toBeNull()
+    expect(localStorage.getItem(LEGACY_DOB_KEY)).toBeNull()
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
+  })
+
+  it('returns null and clears the key when legacy dob is in the future', () => {
+    // #given a legacy dob that is a future date
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10)
+    localStorage.setItem(LEGACY_DOB_KEY, tomorrow)
+    // #when we migrate
+    const result = migrate()
+    // #then first-run is triggered and the garbage key is cleaned up
+    expect(result).toBeNull()
+    expect(localStorage.getItem(LEGACY_DOB_KEY)).toBeNull()
+  })
+
+  it('returns null and clears the key when legacy dob is before 1900', () => {
+    // #given a legacy dob before the reasonable window
+    localStorage.setItem(LEGACY_DOB_KEY, '1850-05-15')
+    // #when we migrate
+    const result = migrate()
+    // #then the unreasonable value is discarded
+    expect(result).toBeNull()
+    expect(localStorage.getItem(LEGACY_DOB_KEY)).toBeNull()
+  })
+
   describe('createFreshState', () => {
     it('builds a v1 state with the given dob and current timestamp', () => {
       // #given a timestamp window
