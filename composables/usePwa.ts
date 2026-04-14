@@ -235,8 +235,9 @@ async function cancelSundayPush(registration: ServiceWorkerRegistration): Promis
 
 /**
  * Test-only reset of the module singleton. Vitest doesn't reload modules
- * between specs by default.
+ * between specs by default. Named distinctly from useFzState's
+ * __resetForTests to avoid a Nuxt auto-import collision.
  */
-export function __resetForTests(): void {
+export function __resetUsePwaForTests(): void {
   _module = null
 }
