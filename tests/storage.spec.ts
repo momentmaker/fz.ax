@@ -1,5 +1,11 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { readState, writeState, clearState } from '../utils/storage'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import {
+  readState,
+  writeState,
+  clearState,
+  readLegacyDob,
+  clearLegacyDob,
+} from '../utils/storage'
 import type { FzState } from '../types/state'
 import { STORAGE_KEY, DEFAULT_PREFS } from '../types/state'
 
@@ -80,5 +86,68 @@ describe('storage', () => {
     // #then both the read and the raw entry are null
     expect(readState()).toBeNull()
     expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
+  })
+
+  it('writeState returns true on success', () => {
+    // #given nothing in particular
+    // #then writing succeeds
+    expect(writeState(sampleState)).toBe(true)
+  })
+})
+
+describe('storage with a hostile localStorage', () => {
+  beforeEach(() => {
+    // #given a clean storage so hostile patches start from zero
+    localStorage.clear()
+  })
+
+  afterEach(() => {
+    // #then restore all spies so later tests see real localStorage
+    vi.restoreAllMocks()
+  })
+
+  it('readState returns null when getItem throws (private browsing)', () => {
+    // #given a SecurityError-throwing localStorage.getItem
+    vi.spyOn(localStorage, 'getItem').mockImplementation(() => {
+      throw new DOMException('The operation is insecure.', 'SecurityError')
+    })
+    // #then readState recovers gracefully
+    expect(readState()).toBeNull()
+  })
+
+  it('writeState returns false when setItem throws (quota exceeded)', () => {
+    // #given a QuotaExceededError-throwing localStorage.setItem
+    vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+      throw new DOMException('QuotaExceededError', 'QuotaExceededError')
+    })
+    // #then writeState reports failure instead of crashing
+    expect(writeState(sampleState)).toBe(false)
+  })
+
+  it('clearState does not throw when removeItem throws', () => {
+    // #given a throwing localStorage.removeItem
+    vi.spyOn(localStorage, 'removeItem').mockImplementation(() => {
+      throw new DOMException('forbidden', 'SecurityError')
+    })
+    // #then clearState is a no-op, not a crash
+    expect(() => clearState()).not.toThrow()
+  })
+
+  it('readLegacyDob returns null when getItem throws', () => {
+    // #given a hostile localStorage
+    vi.spyOn(localStorage, 'getItem').mockImplementation(() => {
+      throw new DOMException('forbidden', 'SecurityError')
+    })
+    // #then readLegacyDob does not propagate
+    expect(readLegacyDob()).toBeNull()
+  })
+
+  it('clearLegacyDob does not throw when removeItem throws', () => {
+    // #given a throwing localStorage
+    vi.spyOn(localStorage, 'removeItem').mockImplementation(() => {
+      throw new DOMException('forbidden', 'SecurityError')
+    })
+    // #then clearLegacyDob is a no-op
+    expect(() => clearLegacyDob()).not.toThrow()
   })
 })

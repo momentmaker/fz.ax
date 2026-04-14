@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { migrate, createFreshState } from '../utils/migrate'
 import { STORAGE_KEY, LEGACY_DOB_KEY, DEFAULT_PREFS } from '../types/state'
 import type { FzState } from '../types/state'
@@ -106,3 +106,33 @@ describe('migrate', () => {
     })
   })
 })
+
+describe('migrate under hostile localStorage', () => {
+  beforeEach(() => {
+    // #given a clean storage before each hostile test
+    localStorage.clear()
+  })
+
+  afterEach(() => {
+    // #then restore all spies so later tests see real localStorage
+    vi.restoreAllMocks()
+  })
+
+  it('returns null without throwing when localStorage is entirely blocked', () => {
+    // #given a storage API that throws on every call
+    vi.spyOn(localStorage, 'getItem').mockImplementation(() => {
+      throw new DOMException('blocked', 'SecurityError')
+    })
+    vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+      throw new DOMException('blocked', 'SecurityError')
+    })
+    vi.spyOn(localStorage, 'removeItem').mockImplementation(() => {
+      throw new DOMException('blocked', 'SecurityError')
+    })
+    // #then migrate reports "no prior state" instead of crashing
+    expect(() => migrate()).not.toThrow()
+    expect(migrate()).toBeNull()
+  })
+})
+
+
