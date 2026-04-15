@@ -72,15 +72,17 @@ export function useTheme(): UseThemeReturn {
         effectiveTheme,
         (next) => {
           if (typeof document === 'undefined') return
-          // When solstice is active, remove data-theme so the
-          // solstice CSS palette takes over without competition.
-          const solsticeActive = document.body.className.includes('solstice-')
-          if (solsticeActive) {
-            document.documentElement.removeAttribute('data-theme')
-          }
-          else {
-            document.documentElement.setAttribute('data-theme', next)
-          }
+          // Always set data-theme. Solstice mode has its own CSS
+          // palette in main.css (body.solstice-* selectors) which
+          // wins on the properties it overrides via specificity.
+          // An earlier version removed data-theme during solstice
+          // as belt-and-suspenders, but that introduced a bug: if
+          // solstice ends mid-session, the solstice watcher removes
+          // the body class but useTheme's watcher doesn't re-fire
+          // (no reactive dep changed), so data-theme would stay
+          // removed and the user's dark preference would be lost.
+          // Always setting data-theme is the correct invariant.
+          document.documentElement.setAttribute('data-theme', next)
         },
         { immediate: true },
       )
