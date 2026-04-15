@@ -129,7 +129,7 @@ function onFileChange(event: Event): void {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: white;
+  background: var(--fz-bg);
   color: var(--fz-yellow);
   border: 1.5px solid var(--fz-blue);
   font-size: 1.1rem;

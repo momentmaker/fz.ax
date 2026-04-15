@@ -104,7 +104,7 @@ function onBackdropClick(): void {
 }
 
 .vow-content {
-  background: white;
+  background: var(--fz-bg);
   border: 1.5px solid var(--fz-blue);
   padding: 1.5rem 1.75rem;
   max-width: 380px;
@@ -150,7 +150,7 @@ function onBackdropClick(): void {
 }
 
 .vow-btn {
-  background: white;
+  background: var(--fz-bg);
   border: 1.5px solid var(--fz-blue);
   color: var(--fz-yellow);
   font-weight: 800;

@@ -235,7 +235,7 @@ function setFirstPaletteRef(el: unknown, i: number): void {
 }
 
 .modal-content {
-  background: white;
+  background: var(--fz-bg);
   padding: 1.75rem;
   width: 360px;
   max-width: calc(100vw - 2rem);
@@ -298,7 +298,7 @@ function setFirstPaletteRef(el: unknown, i: number): void {
 .pop-glyph {
   width: 36px;
   height: 36px;
-  background: white;
+  background: var(--fz-bg);
   color: var(--fz-yellow);
   border: 1.5px solid var(--fz-blue);
   font-size: 1.1rem;
@@ -325,7 +325,7 @@ function setFirstPaletteRef(el: unknown, i: number): void {
   font-weight: 900;
   color: var(--fz-yellow);
   border: 1.5px solid var(--fz-blue);
-  background: white;
+  background: var(--fz-bg);
   padding: 0;
   margin: 0 auto;
   display: block;
@@ -346,7 +346,7 @@ function setFirstPaletteRef(el: unknown, i: number): void {
   font-family: 'Roboto', sans-serif;
   color: var(--fz-text);
   border: 1.5px solid var(--fz-blue);
-  background: white;
+  background: var(--fz-bg);
   font-style: italic;
 }
 
@@ -394,7 +394,7 @@ function setFirstPaletteRef(el: unknown, i: number): void {
 }
 
 .pop-constellation {
-  background: white;
+  background: var(--fz-bg);
   border: 1.5px solid var(--fz-blue);
   color: var(--fz-yellow);
   font-weight: 800;

@@ -74,7 +74,7 @@ function onBackdropClick(): void {
 }
 
 .modal-content {
-  background: white;
+  background: var(--fz-bg);
   padding: 2rem;
   border-radius: 5px;
   text-align: center;

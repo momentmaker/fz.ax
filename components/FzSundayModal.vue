@@ -185,7 +185,7 @@ function onKey(event: KeyboardEvent): void {
 }
 
 .modal-content {
-  background: white;
+  background: var(--fz-bg);
   padding: 2rem 1.75rem;
   width: 380px;
   max-width: calc(100vw - 2rem);
@@ -241,7 +241,7 @@ function onKey(event: KeyboardEvent): void {
   font-weight: 900;
   color: var(--fz-yellow);
   border: 1.5px solid var(--fz-blue);
-  background: white;
+  background: var(--fz-bg);
   padding: 0;
   margin: 0 auto;
   display: block;
@@ -261,7 +261,7 @@ function onKey(event: KeyboardEvent): void {
   font-family: 'Roboto', sans-serif;
   color: var(--fz-text);
   border: 1.5px solid var(--fz-blue);
-  background: white;
+  background: var(--fz-bg);
   font-style: italic;
   resize: vertical;
 }

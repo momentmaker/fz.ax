@@ -141,6 +141,21 @@ function dismissWrite(): void {
   modeOverride.value = { kind: 'idle' }
 }
 
+/**
+ * Public dismiss — called by FzPage's Escape cascade. Dispatches
+ * to dismissUnseal or dismissWrite based on the current mode.
+ */
+function dismiss(): void {
+  if (mode.value.kind === 'unseal') {
+    dismissUnseal()
+  }
+  else if (mode.value.kind === 'write') {
+    dismissWrite()
+  }
+}
+
+defineExpose({ dismiss })
+
 function save(): void {
   errorMsg.value = ''
   if (mode.value.kind !== 'write') return

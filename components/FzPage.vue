@@ -31,6 +31,7 @@ const keyboardHelpOpen = ref(false)
 const cursorIndex = ref(0)
 const cursorVisible = ref(false)
 const letterOpen = ref(false)
+const letterRef = ref<{ dismiss: () => void } | null>(null)
 
 // Compute the active grid column count from the viewport, matching
 // the responsive grid-template-columns media queries in FzGrid's CSS:
@@ -189,6 +190,13 @@ function onEscape(): void {
   }
   if (vowModalOpen.value) {
     closeVowModal()
+    return
+  }
+  if (letterOpen.value) {
+    // FzAnnualLetter exposes a public dismiss() method via defineExpose.
+    // We call it so the child's internal mode machine runs its
+    // cleanup (markLetterRead on unseal dismiss, etc).
+    letterRef.value?.dismiss()
     return
   }
   if (markPopoverOpen.value) {
@@ -360,6 +368,30 @@ onBeforeUnmount(() => {
   }
 })
 
+// Stage 6: for first-run users who just completed FzFirstRun,
+// re-run the Sunday modal + lastVisitedWeek init logic that
+// was skipped in onMounted because state.value was null at
+// that moment. Fires exactly once when state goes from null to
+// non-null (the ceremony just saved a DOB).
+watch(
+  () => state.value,
+  (next, prev) => {
+    if (prev === null && next !== null) {
+      if (shouldPromptToday(next, new Date())) {
+        sundayModalOpen.value = true
+      }
+      const dob = new Date(next.dob)
+      const currentWeek = weekIndex(dob, today.value)
+      try {
+        weeksPassedGap.value = setLastVisitedWeek(currentWeek)
+      }
+      catch {
+        // throw-and-close
+      }
+    }
+  },
+)
+
 watch(solsticeKind, (next, prev) => {
   if (typeof document === 'undefined') return
   if (prev !== null && prev !== undefined) {
@@ -392,7 +424,7 @@ watch(solsticeKind, (next, prev) => {
       :open="vowModalOpen"
       @close="closeVowModal"
     />
-    <FzAnnualLetter @update:visible="letterOpen = $event" />
+    <FzAnnualLetter ref="letterRef" @update:visible="letterOpen = $event" />
     <FzKeyboardHelp
       :open="keyboardHelpOpen"
       @close="closeKeyboardHelp"

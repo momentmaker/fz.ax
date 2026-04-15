@@ -82,7 +82,7 @@ onBeforeUnmount(() => {
 .search-input {
   width: 100%;
   border: 1px solid var(--fz-blue);
-  background: white;
+  background: var(--fz-bg);
   color: var(--fz-blue);
   font-size: 0.9rem;
   font-style: italic;
