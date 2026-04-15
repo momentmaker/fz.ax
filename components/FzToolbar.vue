@@ -79,6 +79,7 @@ function onFileChange(event: Event): void {
 
 <template>
   <div class="toolbar">
+    <FzThemeToggle />
     <FzPushButton />
     <FzInstallButton />
     <button
