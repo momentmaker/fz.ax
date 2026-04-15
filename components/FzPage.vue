@@ -5,8 +5,9 @@ import { usePwa } from '../composables/usePwa'
 import { useKeyboard } from '../composables/useKeyboard'
 import { useHighlight } from '../composables/useHighlight'
 import { useToday } from '../composables/useToday'
+import { useTheme } from '../composables/useTheme'
 import { shouldPromptToday } from '../composables/useSunday'
-import { weekIndex } from '../composables/useTime'
+import { weekIndex, totalWeeks } from '../composables/useTime'
 import { currentSolsticeOrEquinox, getSolsticeLabel, type SolsticeKind } from '../utils/solstice'
 
 const { state, setLastVisitedWeek } = useFzState()
@@ -14,6 +15,7 @@ const { register: registerPwa } = usePwa()
 const keyboard = useKeyboard()
 const highlight = useHighlight()
 const { today } = useToday()
+const theme = useTheme()
 const showModal = ref(false)
 const gridRef = ref<{ scrollToCurrent: () => void } | null>(null)
 
@@ -25,6 +27,10 @@ const vowModalOpen = ref(false)
 const searchOpen = ref(false)
 const quietMode = ref(false)
 const weeksPassedGap = ref<number | null>(null)
+const keyboardHelpOpen = ref(false)
+const cursorIndex = ref(0)
+const cursorVisible = ref(false)
+const GRID_COLS = 21
 
 const solsticeKind = computed<SolsticeKind | null>(() => currentSolsticeOrEquinox(today.value))
 const solsticeLabel = computed(() => {
@@ -66,6 +72,9 @@ function openMarkPopover(week: number): void {
     showModal.value = true
     return
   }
+  // Stage 6: cursor follows clicks (even if cursorVisible is false,
+  // update position so the next arrow press starts from here).
+  cursorIndex.value = week
   markPopoverWeek.value = week
   markPopoverOpen.value = true
 }
@@ -105,19 +114,61 @@ function toggleQuietMode(): void {
   quietMode.value = !quietMode.value
 }
 
+function openKeyboardHelp(): void {
+  keyboardHelpOpen.value = true
+}
+
+function closeKeyboardHelp(): void {
+  keyboardHelpOpen.value = false
+}
+
+function ensureCursorVisible(): void {
+  if (!cursorVisible.value) {
+    cursorVisible.value = true
+    if (state.value !== null) {
+      const dob = new Date(state.value.dob)
+      cursorIndex.value = weekIndex(dob, today.value)
+    }
+  }
+}
+
+function moveCursor(delta: number): void {
+  ensureCursorVisible()
+  const next = Math.max(0, Math.min(totalWeeks - 1, cursorIndex.value + delta))
+  cursorIndex.value = next
+}
+
+function onArrowUp(): void { moveCursor(-GRID_COLS) }
+function onArrowDown(): void { moveCursor(GRID_COLS) }
+function onArrowLeft(): void { moveCursor(-1) }
+function onArrowRight(): void { moveCursor(1) }
+
+function onEnter(): void {
+  if (state.value === null) return
+  if (!cursorVisible.value) return
+  openMarkPopover(cursorIndex.value)
+}
+
+function onQuestion(): void {
+  if (keyboardHelpOpen.value) {
+    closeKeyboardHelp()
+  }
+  else {
+    openKeyboardHelp()
+  }
+}
+
 function onEscape(): void {
   // Cascade: close the highest-priority overlay first.
-  // FzMarkPopover and FzSundayModal have their own @keydown="onKey"
-  // handlers that close on Escape via the locally-focused input. They
-  // are still in this cascade as a safety net for cases where focus is
-  // not inside the modal (e.g., user clicked the backdrop's edge first).
+  if (keyboardHelpOpen.value) {
+    closeKeyboardHelp()
+    return
+  }
   if (searchOpen.value) {
     closeSearch()
     return
   }
   if (showModal.value) {
-    // FzDobModal has no local Escape handler — it relies on this
-    // cascade. Close it via the same path the backdrop click uses.
     closeModal()
     return
   }
@@ -131,6 +182,10 @@ function onEscape(): void {
   }
   if (highlight.isActive.value) {
     highlight.clear()
+    return
+  }
+  if (cursorVisible.value) {
+    cursorVisible.value = false
     return
   }
   if (quietMode.value) {
@@ -210,9 +265,10 @@ const ASCII_HEXAGON = `
 `
 
 onMounted(() => {
-  if (state.value === null) {
-    showModal.value = true
-  }
+  // Stage 6: FzFirstRun replaces the auto-open of FzDobModal
+  // for brand-new users (state.value === null). FzDobModal is
+  // still rendered when the user explicitly opens it (e.g., by
+  // clicking the title to edit DOB later).
   // Idempotent append — a window flag prevents HMR duplicates in dev.
   const w = window as Window & { __fzEggAdded?: boolean }
   if (w.__fzEggAdded !== true) {
@@ -236,6 +292,15 @@ onMounted(() => {
   keyboard.on('q', toggleQuietMode)
   keyboard.on('/', onSlashKey)
   keyboard.on('escape', onEscape)
+  keyboard.on('enter', onEnter)
+  keyboard.on('arrowup', onArrowUp)
+  keyboard.on('arrowdown', onArrowDown)
+  keyboard.on('arrowleft', onArrowLeft)
+  keyboard.on('arrowright', onArrowRight)
+  keyboard.on('?', onQuestion)
+
+  // Stage 6 F3.4: mount theme watcher (applies data-theme to <html>)
+  theme.init()
 
   // Stage 5 F2.2: monday ceremony — after-the-fact notice
   if (state.value !== null) {
@@ -265,6 +330,12 @@ onBeforeUnmount(() => {
   keyboard.off('q', toggleQuietMode)
   keyboard.off('/', onSlashKey)
   keyboard.off('escape', onEscape)
+  keyboard.off('enter', onEnter)
+  keyboard.off('arrowup', onArrowUp)
+  keyboard.off('arrowdown', onArrowDown)
+  keyboard.off('arrowleft', onArrowLeft)
+  keyboard.off('arrowright', onArrowRight)
+  keyboard.off('?', onQuestion)
   if (typeof document !== 'undefined') {
     document.removeEventListener('visibilitychange', onVisibilityChange)
     document.removeEventListener('click', onBodyClick)
@@ -296,6 +367,7 @@ watch(solsticeKind, (next, prev) => {
     <FzMondayNotice :weeks="weeksPassedGap" />
     <FzBanner />
     <FzSearch :open="searchOpen" @close="closeSearch" />
+    <FzFirstRun v-if="state === null" @done="onSaved" />
     <FzDobModal
       :open="showModal"
       @close="closeModal"
@@ -305,9 +377,16 @@ watch(solsticeKind, (next, prev) => {
       :open="vowModalOpen"
       @close="closeVowModal"
     />
+    <FzAnnualLetter />
+    <FzKeyboardHelp
+      :open="keyboardHelpOpen"
+      @close="closeKeyboardHelp"
+    />
     <FzGrid
       ref="gridRef"
-      :modal-open="showModal || markPopoverOpen || sundayModalOpen || vowModalOpen"
+      :modal-open="showModal || markPopoverOpen || sundayModalOpen || vowModalOpen || keyboardHelpOpen"
+      :cursor-index="cursorIndex"
+      :cursor-visible="cursorVisible"
       @hex-click="openMarkPopover"
     />
     <FzMarkPopover
