@@ -272,8 +272,8 @@ function onKey(event: KeyboardEvent): void {
 }
 
 .sunday-whisper-locked {
-  background: #f5f5f5;
-  color: #aaa;
+  background: var(--fz-yellow-soft);
+  color: var(--fz-text-faint);
   border-color: var(--fz-border);
   cursor: not-allowed;
   font-style: normal;
