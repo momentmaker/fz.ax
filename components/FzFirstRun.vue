@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useFzState } from '../composables/useFzState'
 import { totalWeeks } from '../composables/useTime'
 import { isReasonableDob } from '../utils/dob'
@@ -15,10 +15,14 @@ const localDob = ref<string>('')
 const errorMsg = ref<string>('')
 const dobInput = ref<HTMLInputElement | null>(null)
 
+let armTimer: ReturnType<typeof setTimeout> | null = null
+
 function armClicks(): void {
   clickArmed.value = false
-  setTimeout(() => {
+  if (armTimer !== null) clearTimeout(armTimer)
+  armTimer = setTimeout(() => {
     clickArmed.value = true
+    armTimer = null
   }, 1500)
 }
 
@@ -61,6 +65,13 @@ function save(): void {
 onMounted(() => {
   localDob.value = defaultFourThousandWeeksAgo()
   armClicks()
+})
+
+onBeforeUnmount(() => {
+  if (armTimer !== null) {
+    clearTimeout(armTimer)
+    armTimer = null
+  }
 })
 
 const screenText = computed(() => {

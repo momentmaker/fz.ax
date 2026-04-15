@@ -30,7 +30,22 @@ const weeksPassedGap = ref<number | null>(null)
 const keyboardHelpOpen = ref(false)
 const cursorIndex = ref(0)
 const cursorVisible = ref(false)
-const GRID_COLS = 21
+const letterOpen = ref(false)
+
+// Compute the active grid column count from the viewport, matching
+// the responsive grid-template-columns media queries in FzGrid's CSS:
+//   ≥1024px  → 21 cols (desktop)
+//   ≥768px   → 12 cols (tablet)
+//   <768px   → 7 cols (mobile)
+// Arrow up/down moves the cursor by this count so keyboard nav aligns
+// with the visible grid geometry on every viewport.
+function gridCols(): number {
+  if (typeof window === 'undefined') return 21
+  const w = window.innerWidth
+  if (w <= 768) return 7
+  if (w <= 1024) return 12
+  return 21
+}
 
 const solsticeKind = computed<SolsticeKind | null>(() => currentSolsticeOrEquinox(today.value))
 const solsticeLabel = computed(() => {
@@ -43,7 +58,7 @@ let mondayTimer: ReturnType<typeof setTimeout> | null = null
 const containerClasses = computed(() => ({
   // Any modal disables grid pointer-events so the user can't click a
   // second hexagon while another modal is open.
-  'modal-open': showModal.value || markPopoverOpen.value || sundayModalOpen.value || vowModalOpen.value,
+  'modal-open': showModal.value || markPopoverOpen.value || sundayModalOpen.value || vowModalOpen.value || letterOpen.value || keyboardHelpOpen.value,
   'fz-quiet': quietMode.value,
 }))
 
@@ -138,8 +153,8 @@ function moveCursor(delta: number): void {
   cursorIndex.value = next
 }
 
-function onArrowUp(): void { moveCursor(-GRID_COLS) }
-function onArrowDown(): void { moveCursor(GRID_COLS) }
+function onArrowUp(): void { moveCursor(-gridCols()) }
+function onArrowDown(): void { moveCursor(gridCols()) }
 function onArrowLeft(): void { moveCursor(-1) }
 function onArrowRight(): void { moveCursor(1) }
 
@@ -377,14 +392,14 @@ watch(solsticeKind, (next, prev) => {
       :open="vowModalOpen"
       @close="closeVowModal"
     />
-    <FzAnnualLetter />
+    <FzAnnualLetter @update:visible="letterOpen = $event" />
     <FzKeyboardHelp
       :open="keyboardHelpOpen"
       @close="closeKeyboardHelp"
     />
     <FzGrid
       ref="gridRef"
-      :modal-open="showModal || markPopoverOpen || sundayModalOpen || vowModalOpen || keyboardHelpOpen"
+      :modal-open="showModal || markPopoverOpen || sundayModalOpen || vowModalOpen || keyboardHelpOpen || letterOpen"
       :cursor-index="cursorIndex"
       :cursor-visible="cursorVisible"
       @hex-click="openMarkPopover"

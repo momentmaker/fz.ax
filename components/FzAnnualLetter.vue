@@ -6,6 +6,10 @@ import { birthdayWeeksOfLife } from '../utils/birthday'
 import { currentGridIndex, weekRange } from '../composables/useTime'
 import { localDateString } from '../utils/date'
 
+const emit = defineEmits<{
+  (e: 'update:visible', value: boolean): void
+}>()
+
 interface LetterEntry {
   text: string
   sealedAt: string
@@ -94,6 +98,22 @@ const unsealYear = computed(() => {
 
 function dismissUnseal(): void {
   if (mode.value.kind !== 'unseal') return
+  // Mark the current letter as read when the user actively
+  // dismisses. If the user closes the browser tab without
+  // dismissing, the letter stays unread and will show again on
+  // the next visit — which is desired (the point of an unread
+  // letter is that the user has not seen it yet). An earlier
+  // version marked read on mode-enter via a watch, but that
+  // caused a cascade: marking letter N updated state, which
+  // recomputed unsealQueue, which changed mode, which re-fired
+  // the watch on letter N+1 and marked IT before the user saw it.
+  try {
+    markLetterRead(mode.value.current.sealedAt)
+  }
+  catch {
+    // best-effort — if storage is disabled, the letter will
+    // keep showing on subsequent loads
+  }
   const currentQueue = mode.value.queue
   const nextIdx = mode.value.queueIdx + 1
   if (nextIdx < currentQueue.length) {
@@ -145,20 +165,17 @@ function save(): void {
   }
 }
 
-// On mode change: if entering unseal mode, mark the letter read
-// immediately (not on dismiss) so closing without clicking the
-// "i read this" button still records "seen".
+// On mode change: emit visibility update to FzPage (so it can
+// add modal-open to the container) and focus textarea when
+// entering write mode. markLetterRead is NOT called here —
+// it moved to dismissUnseal to avoid the cascade bug where
+// marking letter N would update state, recompute unsealQueue,
+// re-fire this watch, and auto-mark letter N+1 before the user
+// saw it.
 watch(
   () => mode.value,
   (m) => {
-    if (m.kind === 'unseal') {
-      try {
-        markLetterRead(m.current.sealedAt)
-      }
-      catch {
-        // ignore — best-effort
-      }
-    }
+    emit('update:visible', m.kind !== 'idle')
     if (m.kind === 'write') {
       void nextTick(() => {
         textareaRef.value?.focus()
