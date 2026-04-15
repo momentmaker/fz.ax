@@ -4,14 +4,21 @@ import { useFzState } from '../composables/useFzState'
 import { useHighlight } from '../composables/useHighlight'
 import { useToday } from '../composables/useToday'
 import { currentGridIndex, weekRange, totalWeeks } from '../composables/useTime'
+import { birthdayWeeksOfLife } from '../utils/birthday'
 
 interface Props {
   /** Whether a modal is open (suppresses hover text) */
   modalOpen?: boolean
+  /** Keyboard cursor index (passed from FzPage, Stage 6 F3.5) */
+  cursorIndex?: number | null
+  /** Whether the keyboard cursor is visible */
+  cursorVisible?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modalOpen: false,
+  cursorIndex: null,
+  cursorVisible: false,
 })
 
 const emit = defineEmits<{
@@ -69,12 +76,29 @@ const anchorSet = computed<ReadonlySet<number>>(() => {
   return new Set(state.value?.anchors ?? [])
 })
 
+// Stage 6 F3.2: birthday week indices derived from dob.
+// Memoized via computed so the 77-entry Set is only rebuilt
+// when state.value.dob changes.
+const birthdaySet = computed<ReadonlySet<number>>(() => {
+  if (dobDate.value === null) return new Set<number>()
+  return birthdayWeeksOfLife(dobDate.value)
+})
+
 function isLit(index: number): boolean {
   return litSet.value.has(index)
 }
 
 function isAnchored(index: number): boolean {
   return anchorSet.value.has(index)
+}
+
+function isBirthday(index: number): boolean {
+  return birthdaySet.value.has(index)
+}
+
+function isCursor(index: number): boolean {
+  if (!props.cursorVisible) return false
+  return props.cursorIndex === index
 }
 
 function onAnchorToggle(index: number): void {
@@ -118,7 +142,7 @@ defineExpose({ scrollToCurrent })
       v-for="i in indices"
       :id="i === currentIndex ? 'current-week' : undefined"
       :key="i"
-      v-memo="[i === currentIndex, markFor(i), whisperFor(i), props.modalOpen, dobString, isLit(i), isHighlightActive, isAnchored(i)]"
+      v-memo="[i === currentIndex, markFor(i), whisperFor(i), props.modalOpen, dobString, isLit(i), isHighlightActive, isAnchored(i), isBirthday(i), isCursor(i)]"
       :index="i"
       :state="getState(i)"
       :hover-text="getHoverText(i)"
@@ -128,6 +152,8 @@ defineExpose({ scrollToCurrent })
       :lit="isLit(i)"
       :dim="isHighlightActive && !isLit(i)"
       :anchored="isAnchored(i)"
+      :birthday="isBirthday(i)"
+      :cursor="isCursor(i)"
       @click="onHexClick(i)"
       @anchor-toggle="onAnchorToggle(i)"
     />
