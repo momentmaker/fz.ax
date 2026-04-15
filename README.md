@@ -122,6 +122,8 @@ Each stage was shipped via a multi-round adversarial review process. See `docs/s
 
 ## License
 
+[MIT](LICENSE).
+
 fz.ax is a personal practice turned into software. The code is open source for the purpose of trust: you can audit it, verify there is no telemetry, and confirm your data never leaves your device. Forks are welcome if they honor the soul.
 
 ---
