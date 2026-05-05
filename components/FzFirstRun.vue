@@ -97,6 +97,16 @@ const screenText = computed(() => {
           >
           <button class="ceremony-button" @click="save">4⬢⏣⬡</button>
           <p v-if="errorMsg !== ''" class="ceremony-error">{{ errorMsg }}</p>
+          <p class="ceremony-meta">
+            stays in this browser. no account, no server. ·
+            <a
+              class="ceremony-source"
+              href="https://github.com/momentmaker/fz.ax"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="view source on github"
+            >⎇ source</a>
+          </p>
         </div>
 
         <p v-if="clickArmed && screen !== 3" class="ceremony-hint">(click to continue)</p>
@@ -178,6 +188,29 @@ const screenText = computed(() => {
   margin: 0.25rem 0 0;
   color: var(--fz-red);
   font-size: 0.75rem;
+}
+
+.ceremony-meta {
+  margin: 1.5rem 0 0;
+  font-size: 0.65rem;
+  font-style: italic;
+  color: var(--fz-text-quiet);
+  letter-spacing: 0.04em;
+}
+
+.ceremony-source {
+  color: var(--fz-text-quiet);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--fz-text-quiet);
+  padding-bottom: 1px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.ceremony-source:hover,
+.ceremony-source:focus-visible {
+  color: var(--fz-yellow);
+  border-bottom-color: var(--fz-yellow);
+  outline: none;
 }
 
 .ceremony-enter-active,
