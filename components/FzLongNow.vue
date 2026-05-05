@@ -19,7 +19,12 @@ const year = computed(() => today.value.getFullYear())
       target="_blank"
       rel="noopener noreferrer"
       aria-label="view source on github"
-    >⎇ source</a>
+    >⎇ source</a> ·
+    <a
+      class="long-now-source"
+      href="https://ig.fz.ax"
+      aria-label="visit ig.fz.ax — public photographic practice"
+    >ig.fz.ax</a>
   </div>
 </template>
 
