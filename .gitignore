@@ -29,5 +29,4 @@ coverage
 # Brainstorming companion
 .superpowers/
 
-# Autopilot state
-.claude/autopilot-state.md
+.claude
