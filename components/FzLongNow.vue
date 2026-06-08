@@ -29,7 +29,12 @@ const year = computed(() => today.value.getFullYear())
       class="long-now-source"
       href="https://um.fz.ax"
       aria-label="visit um.fz.ax — wiki"
-    >❡ wiki</a>
+    >❡ wiki</a> ·
+    <a
+      class="long-now-source"
+      href="https://rl.fz.ax"
+      aria-label="visit rl.fz.ax — daily learning"
+    >✦ learn</a>
   </div>
 </template>
 
